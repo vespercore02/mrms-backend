@@ -10,6 +10,7 @@ const dataListRoutes = require('./routes/dataList.routes');
 const filePathRoutes = require('./routes/filePath.routes');
 const roleRoutes = require('./routes/role.routes');
 const userRoutes = require('./routes/user.routes');
+const requestRoutes = require('./routes/request.routes');
 
 const app = express();
 
@@ -31,5 +32,6 @@ app.use('/api/data-lists', dataListRoutes);
 app.use('/api/file-paths', filePathRoutes);
 app.use('/api/roles', roleRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/requests', requestRoutes);
 
 module.exports = app;
