@@ -1,3 +1,5 @@
+const createAuditLog = require('../utils/auditLogger');
+
 const {
   Request,
   RequestStatusHistory,
@@ -64,6 +66,15 @@ const createRequest = async (payload) => {
     Remarks: 'Request created',
   });
 
+  await createAuditLog({
+  action: 'CREATE',
+  tableName: 'tblRequests',
+  recordId: request.RequestID,
+  oldValue: null,
+  newValue: request.toJSON(),
+  performedBy: payload.RequestedBy,
+});
+
   return request;
 };
 
@@ -96,6 +107,20 @@ const updateRequestStatus = async (id, payload) => {
     ChangedBy: payload.ChangedBy,
     Remarks: payload.Remarks,
   });
+
+  await createAuditLog({
+  action: 'STATUS_UPDATE',
+  tableName: 'tblRequests',
+  recordId: request.RequestID,
+  oldValue: {
+    Status: oldStatus,
+  },
+  newValue: {
+    Status: newStatus,
+    Remarks: payload.Remarks,
+  },
+  performedBy: payload.ChangedBy,
+});
 
   return request;
 };

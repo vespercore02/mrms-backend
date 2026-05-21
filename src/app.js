@@ -11,6 +11,7 @@ const filePathRoutes = require('./routes/filePath.routes');
 const roleRoutes = require('./routes/role.routes');
 const userRoutes = require('./routes/user.routes');
 const requestRoutes = require('./routes/request.routes');
+const auditLogRoutes = require('./routes/auditLog.routes');
 
 const app = express();
 
@@ -33,5 +34,6 @@ app.use('/api/file-paths', filePathRoutes);
 app.use('/api/roles', roleRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/requests', requestRoutes);
+app.use('/api/audit-logs', auditLogRoutes);
 
 module.exports = app;
