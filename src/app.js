@@ -34,11 +34,72 @@ app.use('/api/specifics', protect, specificRoutes);
 app.use('/api/agency-forms', protect, agencyFormRoutes);
 app.use('/api/data-lists', protect, dataListRoutes);
 app.use('/api/file-paths', protect, filePathRoutes);
-app.use('/api/roles', protect, allowRoles('Admin'), roleRoutes);
-app.use('/api/users', protect, allowRoles('Admin'), userRoutes);
 app.use('/api/requests', protect, requestRoutes);
 app.use('/api/audit-logs', protect, auditLogRoutes);
 app.use('/api/auth', authRoutes);
 
+// Public muna habang dev, or protect later
+app.use('/api/users', protect, allowRoles('Admin'), userRoutes);
+app.use('/api/roles', protect, allowRoles('Admin'), roleRoutes);
+
+// Records master data
+app.use(
+  '/api/departments',
+  protect,
+  allowRoles('Admin', 'Records Officer'),
+  departmentRoutes
+);
+
+app.use(
+  '/api/series',
+  protect,
+  allowRoles('Admin', 'Records Officer'),
+  seriesRoutes
+);
+
+app.use(
+  '/api/specifics',
+  protect,
+  allowRoles('Admin', 'Records Officer'),
+  specificRoutes
+);
+
+// Agency records
+app.use(
+  '/api/agency-forms',
+  protect,
+  allowRoles('Admin', 'Records Officer'),
+  agencyFormRoutes
+);
+
+app.use(
+  '/api/data-lists',
+  protect,
+  allowRoles('Admin', 'Records Officer'),
+  dataListRoutes
+);
+
+app.use(
+  '/api/file-paths',
+  protect,
+  allowRoles('Admin', 'Records Officer'),
+  filePathRoutes
+);
+
+// Requests
+app.use(
+  '/api/requests',
+  protect,
+  allowRoles('Admin', 'Records Officer', 'Viewer'),
+  requestRoutes
+);
+
+// Audit logs
+app.use(
+  '/api/audit-logs',
+  protect,
+  allowRoles('Admin'),
+  auditLogRoutes
+);
 
 module.exports = app;
