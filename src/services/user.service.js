@@ -1,3 +1,4 @@
+const bcrypt = require('bcryptjs');
 const { User, Role } = require('../models');
 
 const getAllUsers = async () => {
@@ -15,13 +16,21 @@ const getUserById = async (id) => {
 };
 
 const createUser = async (payload) => {
-  return await User.create(payload);
+  const hashedPassword = await bcrypt.hash(payload.Password, 10);
+
+  return await User.create({
+    ...payload,
+    Password: hashedPassword,
+  });
 };
 
 const updateUser = async (id, payload) => {
   const user = await User.findByPk(id);
-
   if (!user) return null;
+
+  if (payload.Password) {
+    payload.Password = await bcrypt.hash(payload.Password, 10);
+  }
 
   await user.update(payload);
   return user;
@@ -29,7 +38,6 @@ const updateUser = async (id, payload) => {
 
 const deleteUser = async (id) => {
   const user = await User.findByPk(id);
-
   if (!user) return null;
 
   await user.destroy();

@@ -12,6 +12,7 @@ const roleRoutes = require('./routes/role.routes');
 const userRoutes = require('./routes/user.routes');
 const requestRoutes = require('./routes/request.routes');
 const auditLogRoutes = require('./routes/auditLog.routes');
+const authRoutes = require('./routes/auth.routes');
 
 const app = express();
 
@@ -35,5 +36,6 @@ app.use('/api/roles', roleRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/requests', requestRoutes);
 app.use('/api/audit-logs', auditLogRoutes);
+app.use('/api/auth', authRoutes);
 
 module.exports = app;
