@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
+const { protect, allowRoles } = require('./middlewares/authMiddleware');
 
 const departmentRoutes = require('./routes/department.routes');
 const seriesRoutes = require('./routes/series.routes');
@@ -14,6 +15,7 @@ const requestRoutes = require('./routes/request.routes');
 const auditLogRoutes = require('./routes/auditLog.routes');
 const authRoutes = require('./routes/auth.routes');
 
+
 const app = express();
 
 app.use(cors());
@@ -26,16 +28,17 @@ app.get('/', (req, res) => {
   });
 });
 
-app.use('/api/departments', departmentRoutes);
-app.use('/api/series', seriesRoutes);
-app.use('/api/specifics', specificRoutes);
-app.use('/api/agency-forms', agencyFormRoutes);
-app.use('/api/data-lists', dataListRoutes);
-app.use('/api/file-paths', filePathRoutes);
-app.use('/api/roles', roleRoutes);
-app.use('/api/users', userRoutes);
-app.use('/api/requests', requestRoutes);
-app.use('/api/audit-logs', auditLogRoutes);
+app.use('/api/departments', protect, departmentRoutes);
+app.use('/api/series', protect, seriesRoutes);
+app.use('/api/specifics', protect, specificRoutes);
+app.use('/api/agency-forms', protect, agencyFormRoutes);
+app.use('/api/data-lists', protect, dataListRoutes);
+app.use('/api/file-paths', protect, filePathRoutes);
+app.use('/api/roles', protect, allowRoles('Admin'), roleRoutes);
+app.use('/api/users', protect, allowRoles('Admin'), userRoutes);
+app.use('/api/requests', protect, requestRoutes);
+app.use('/api/audit-logs', protect, auditLogRoutes);
 app.use('/api/auth', authRoutes);
+
 
 module.exports = app;
