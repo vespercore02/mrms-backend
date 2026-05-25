@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
 const { protect, allowRoles } = require('./middlewares/authMiddleware');
+const errorHandler = require('./middlewares/errorHandler');
 
 const departmentRoutes = require('./routes/department.routes');
 const seriesRoutes = require('./routes/series.routes');
@@ -101,5 +102,7 @@ app.use(
   allowRoles('Admin'),
   auditLogRoutes
 );
+
+app.use(errorHandler);
 
 module.exports = app;

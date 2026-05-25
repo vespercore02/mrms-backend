@@ -1,139 +1,89 @@
 const requestService = require('../services/request.service');
+const asyncHandler = require('../utils/asyncHandler');
 
-const getAllRequests = async (req, res) => {
-  try {
-    const requests = await requestService.getAllRequests();
+const getAllRequests = asyncHandler(async (req, res) => {
+  const requests = await requestService.getAllRequests();
 
-    return res.status(200).json({
-      success: true,
-      data: requests,
-    });
-  } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: 'Failed to fetch requests',
-      error: error.message,
-    });
+  return res.status(200).json({
+    success: true,
+    data: requests,
+  });
+});
+
+const getRequestById = asyncHandler(async (req, res) => {
+  const request = await requestService.getRequestById(req.params.id);
+
+  if (!request) {
+    const error = new Error('Request not found');
+    error.statusCode = 404;
+    throw error;
   }
-};
 
-const getRequestById = async (req, res) => {
-  try {
-    const request = await requestService.getRequestById(req.params.id);
+  return res.status(200).json({
+    success: true,
+    data: request,
+  });
+});
 
-    if (!request) {
-      return res.status(404).json({
-        success: false,
-        message: 'Request not found',
-      });
-    }
+const createRequest = asyncHandler(async (req, res) => {
+  const request = await requestService.createRequest(req.body);
 
-    return res.status(200).json({
-      success: true,
-      data: request,
-    });
-  } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: 'Failed to fetch request',
-      error: error.message,
-    });
+  return res.status(201).json({
+    success: true,
+    message: 'Request created successfully',
+    data: request,
+  });
+});
+
+const updateRequest = asyncHandler(async (req, res) => {
+  const request = await requestService.updateRequest(req.params.id, req.body);
+
+  if (!request) {
+    const error = new Error('Request not found');
+    error.statusCode = 404;
+    throw error;
   }
-};
 
-const createRequest = async (req, res) => {
-  try {
-    const request = await requestService.createRequest(req.body);
+  return res.status(200).json({
+    success: true,
+    message: 'Request updated successfully',
+    data: request,
+  });
+});
 
-    return res.status(201).json({
-      success: true,
-      message: 'Request created successfully',
-      data: request,
-    });
-  } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: 'Failed to create request',
-      error: error.message,
-    });
+const updateRequestStatus = asyncHandler(async (req, res) => {
+  const request = await requestService.updateRequestStatus(
+    req.params.id,
+    req.body
+  );
+
+  if (!request) {
+    const error = new Error('Request not found');
+    error.statusCode = 404;
+    throw error;
   }
-};
 
-const updateRequest = async (req, res) => {
-  try {
-    const request = await requestService.updateRequest(req.params.id, req.body);
+  return res.status(200).json({
+    success: true,
+    message: 'Request status updated successfully',
+    data: request,
+  });
+});
 
-    if (!request) {
-      return res.status(404).json({
-        success: false,
-        message: 'Request not found',
-      });
-    }
+const deleteRequest = asyncHandler(async (req, res) => {
+  const request = await requestService.deleteRequest(req.params.id);
 
-    return res.status(200).json({
-      success: true,
-      message: 'Request updated successfully',
-      data: request,
-    });
-  } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: 'Failed to update request',
-      error: error.message,
-    });
+  if (!request) {
+    const error = new Error('Request not found');
+    error.statusCode = 404;
+    throw error;
   }
-};
 
-const updateRequestStatus = async (req, res) => {
-  try {
-    const request = await requestService.updateRequestStatus(
-      req.params.id,
-      req.body
-    );
-
-    if (!request) {
-      return res.status(404).json({
-        success: false,
-        message: 'Request not found',
-      });
-    }
-
-    return res.status(200).json({
-      success: true,
-      message: 'Request status updated successfully',
-      data: request,
-    });
-    } catch (error) {
-    return res.status(error.statusCode || 500).json({
-      success: false,
-      message: error.message || 'Failed to update request status',
-    });
-  }
-};
-
-const deleteRequest = async (req, res) => {
-  try {
-    const request = await requestService.deleteRequest(req.params.id);
-
-    if (!request) {
-      return res.status(404).json({
-        success: false,
-        message: 'Request not found',
-      });
-    }
-
-    return res.status(200).json({
-      success: true,
-      message: 'Request deleted successfully',
-    });
-  } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: 'Failed to delete request',
-      error: error.message,
-    });
-  }
-};
+  return res.status(200).json({
+    success: true,
+    message: 'Request deleted successfully',
+  });
+});
 
 module.exports = {
   getAllRequests,
