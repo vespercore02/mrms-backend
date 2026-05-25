@@ -2,7 +2,7 @@ const specificService = require('../services/specific.service');
 
 const getAllSpecifics = async (req, res) => {
   try {
-    const specifics = await specificService.getAllSpecifics();
+    const specifics = await specificService.getAllSpecifics(req.query);
 
     return res.status(200).json({
       success: true,

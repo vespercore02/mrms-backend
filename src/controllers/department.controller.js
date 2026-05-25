@@ -2,7 +2,7 @@ const departmentService = require('../services/department.service');
 
 const getAllDepartments = async (req, res) => {
   try {
-    const departments = await departmentService.getAllDepartments();
+    const departments = await departmentService.getAllDepartments(req.query);
 
     return res.status(200).json({
       success: true,

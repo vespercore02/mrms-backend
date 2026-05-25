@@ -2,7 +2,7 @@ const requestService = require('../services/request.service');
 const asyncHandler = require('../utils/asyncHandler');
 
 const getAllRequests = asyncHandler(async (req, res) => {
-  const requests = await requestService.getAllRequests();
+  const requests = await requestService.getAllRequests(req.query);
 
   return res.status(200).json({
     success: true,

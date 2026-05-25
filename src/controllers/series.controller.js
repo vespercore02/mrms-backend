@@ -2,7 +2,7 @@ const seriesService = require('../services/series.service');
 
 const getAllSeries = async (req, res) => {
   try {
-    const series = await seriesService.getAllSeries();
+    const series = await seriesService.getAllSeries(req.query);
 
     return res.status(200).json({
       success: true,

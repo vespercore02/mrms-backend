@@ -1,5 +1,7 @@
 const createAuditLog = require('../utils/auditLogger');
 const { canTransitionStatus } = require('../utils/workflowRules');
+const { Op } = require('sequelize');
+const { getPagination, getPagingData } = require('../utils/pagination');
 
 const {
   Request,
@@ -18,8 +20,31 @@ const generateRequestCode = () => {
   return `REQ-${y}${m}${d}-${random}`;
 };
 
-const getAllRequests = async () => {
-  return await Request.findAll({
+const getAllRequests = async (query) => {
+  const { page, limit, offset } = getPagination(query);
+
+  const where = {};
+
+  if (query.status) {
+    where.Status = query.status;
+  }
+
+  if (query.requestType) {
+    where.RequestType = {
+      [Op.like]: `%${query.requestType}%`,
+    };
+  }
+
+  if (query.search) {
+    where[Op.or] = [
+      { RequestCode: { [Op.like]: `%${query.search}%` } },
+      { RequestType: { [Op.like]: `%${query.search}%` } },
+      { Remarks: { [Op.like]: `%${query.search}%` } },
+    ];
+  }
+
+  const result = await Request.findAndCountAll({
+    where,
     include: [
       {
         model: User,
@@ -30,7 +55,12 @@ const getAllRequests = async () => {
       RequestStatusHistory,
     ],
     order: [['createdAt', 'DESC']],
+    limit,
+    offset,
+    distinct: true,
   });
+
+  return getPagingData(result, page, limit);
 };
 
 const getRequestById = async (id) => {

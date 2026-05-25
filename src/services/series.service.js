@@ -1,9 +1,33 @@
 const { Series, Department } = require('../models');
+const { Op } = require('sequelize');
+const { getPagination, getPagingData } = require('../utils/pagination');
 
-const getAllSeries = async () => {
-  return await Series.findAll({
+const getAllSeries = async (query) => {
+  const { page, limit, offset } = getPagination(query);
+
+  const where = {};
+
+  if (query.departmentId) {
+    where.DepartmentID = query.departmentId;
+  }
+
+  if (query.search) {
+    where[Op.or] = [
+      { ItemNoID: { [Op.like]: `%${query.search}%` } },
+      { SeriesName: { [Op.like]: `%${query.search}%` } },
+    ];
+  }
+
+  const result = await Series.findAndCountAll({
+    where,
     include: [Department],
+    limit,
+    offset,
+    order: [['ItemNoID', 'ASC']],
+    distinct: true,
   });
+
+  return getPagingData(result, page, limit);
 };
 
 const getSeriesById = async (id) => {

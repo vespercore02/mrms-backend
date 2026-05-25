@@ -1,9 +1,33 @@
 const { Specific, Series } = require('../models');
+const { Op } = require('sequelize');
+const { getPagination, getPagingData } = require('../utils/pagination');
 
-const getAllSpecifics = async () => {
-  return await Specific.findAll({
+const getAllSpecifics = async (query) => {
+  const { page, limit, offset } = getPagination(query);
+
+  const where = {};
+
+  if (query.seriesId) {
+    where.SeriesID = query.seriesId;
+  }
+
+  if (query.search) {
+    where[Op.or] = [
+      { SpecificName: { [Op.like]: `%${query.search}%` } },
+      { RetentionPeriod: { [Op.like]: `%${query.search}%` } },
+    ];
+  }
+
+  const result = await Specific.findAndCountAll({
+    where,
     include: [Series],
+    limit,
+    offset,
+    order: [['SpecificName', 'ASC']],
+    distinct: true,
   });
+
+  return getPagingData(result, page, limit);
 };
 
 const getSpecificById = async (id) => {
