@@ -4,6 +4,8 @@ const morgan = require('morgan');
 const logger = require('./utils/logger');
 const { protect, allowRoles } = require('./middlewares/authMiddleware');
 const errorHandler = require('./middlewares/errorHandler');
+const path = require('path');
+
 
 const departmentRoutes = require('./routes/department.routes');
 const seriesRoutes = require('./routes/series.routes');
@@ -35,6 +37,9 @@ app.get('/', (req, res) => {
     message: 'MRMS API is running',
   });
 });
+
+
+app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
 app.use('/api/departments', protect, departmentRoutes);
 app.use('/api/series', protect, seriesRoutes);

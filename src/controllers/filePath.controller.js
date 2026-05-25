@@ -108,10 +108,52 @@ const deleteFilePath = async (req, res) => {
   }
 };
 
+
+const uploadFilePath = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: 'No file uploaded',
+      });
+    }
+
+    const { AgencyUniqueID } = req.body;
+
+    if (!AgencyUniqueID) {
+      return res.status(400).json({
+        success: false,
+        message: 'AgencyUniqueID is required',
+      });
+    }
+
+    const filePath = await filePathService.createFilePath({
+      FilePathLocation: req.file.path,
+      FilePathUniqueID: AgencyUniqueID,
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: 'File uploaded successfully',
+      data: {
+        file: req.file,
+        record: filePath,
+      },
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to upload file',
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   getAllFilePaths,
   getFilePathById,
   createFilePath,
+  uploadFilePath,
   updateFilePath,
   deleteFilePath,
 };
