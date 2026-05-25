@@ -1,4 +1,8 @@
 const filePathService = require('../services/filePath.service');
+const path = require('path');
+const fs = require('fs');
+const { AgencyForm } = require('../models');
+const getFileUrl = require('../utils/fileUrl');
 
 const getAllFilePaths = async (req, res) => {
   try {
@@ -109,21 +113,35 @@ const deleteFilePath = async (req, res) => {
 };
 
 
+
 const uploadFilePath = async (req, res) => {
   try {
+    const { AgencyUniqueID } = req.body;
+
+    if (!AgencyUniqueID) {
+      if (req.file) fs.unlinkSync(req.file.path);
+
+      return res.status(400).json({
+        success: false,
+        message: 'AgencyUniqueID is required',
+      });
+    }
+
+    const agency = await AgencyForm.findByPk(AgencyUniqueID);
+
+    if (!agency) {
+      if (req.file) fs.unlinkSync(req.file.path);
+
+      return res.status(404).json({
+        success: false,
+        message: 'Agency not found. Create agency form first.',
+      });
+    }
+
     if (!req.file) {
       return res.status(400).json({
         success: false,
         message: 'No file uploaded',
-      });
-    }
-
-    const { AgencyUniqueID } = req.body;
-
-    if (!AgencyUniqueID) {
-      return res.status(400).json({
-        success: false,
-        message: 'AgencyUniqueID is required',
       });
     }
 
@@ -136,14 +154,80 @@ const uploadFilePath = async (req, res) => {
       success: true,
       message: 'File uploaded successfully',
       data: {
-        file: req.file,
+        id: filePath.FilePathID,
+        originalName: req.file.originalname,
+        storedPath: req.file.path,
+        url: getFileUrl(req, req.file.path),
         record: filePath,
       },
     });
   } catch (error) {
+    if (req.file) fs.unlinkSync(req.file.path);
+
     return res.status(500).json({
       success: false,
       message: 'Failed to upload file',
+      error: error.message,
+    });
+  }
+};
+
+
+const viewFile = async (req, res) => {
+  try {
+    const filePath = await filePathService.getFilePathById(req.params.id);
+
+    if (!filePath) {
+      return res.status(404).json({
+        success: false,
+        message: 'File record not found',
+      });
+    }
+
+    const absolutePath = path.join(process.cwd(), filePath.FilePathLocation);
+
+    if (!fs.existsSync(absolutePath)) {
+      return res.status(404).json({
+        success: false,
+        message: 'Physical file not found',
+      });
+    }
+
+    return res.sendFile(absolutePath);
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to view file',
+      error: error.message,
+    });
+  }
+};
+
+const downloadFile = async (req, res) => {
+  try {
+    const filePath = await filePathService.getFilePathById(req.params.id);
+
+    if (!filePath) {
+      return res.status(404).json({
+        success: false,
+        message: 'File record not found',
+      });
+    }
+
+    const absolutePath = path.join(process.cwd(), filePath.FilePathLocation);
+
+    if (!fs.existsSync(absolutePath)) {
+      return res.status(404).json({
+        success: false,
+        message: 'Physical file not found',
+      });
+    }
+
+    return res.download(absolutePath);
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to download file',
       error: error.message,
     });
   }
@@ -154,6 +238,8 @@ module.exports = {
   getFilePathById,
   createFilePath,
   uploadFilePath,
+  viewFile,
+  downloadFile,
   updateFilePath,
   deleteFilePath,
 };
