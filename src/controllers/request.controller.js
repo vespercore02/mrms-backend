@@ -103,11 +103,10 @@ const updateRequestStatus = async (req, res) => {
       message: 'Request status updated successfully',
       data: request,
     });
-  } catch (error) {
-    return res.status(500).json({
+    } catch (error) {
+    return res.status(error.statusCode || 500).json({
       success: false,
-      message: 'Failed to update request status',
-      error: error.message,
+      message: error.message || 'Failed to update request status',
     });
   }
 };

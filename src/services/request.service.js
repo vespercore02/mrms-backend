@@ -1,4 +1,5 @@
 const createAuditLog = require('../utils/auditLogger');
+const { canTransitionStatus } = require('../utils/workflowRules');
 
 const {
   Request,
@@ -95,6 +96,14 @@ const updateRequestStatus = async (id, payload) => {
   const oldStatus = request.Status;
   const newStatus = payload.Status;
 
+  const isAllowed = canTransitionStatus(oldStatus, newStatus);
+
+  if (!isAllowed) {
+    const error = new Error(`Invalid status transition: ${oldStatus} to ${newStatus}`);
+    error.statusCode = 400;
+    throw error;
+  }
+
   await request.update({
     Status: newStatus,
     Remarks: payload.Remarks || request.Remarks,
@@ -109,18 +118,18 @@ const updateRequestStatus = async (id, payload) => {
   });
 
   await createAuditLog({
-  action: 'STATUS_UPDATE',
-  tableName: 'tblRequests',
-  recordId: request.RequestID,
-  oldValue: {
-    Status: oldStatus,
-  },
-  newValue: {
-    Status: newStatus,
-    Remarks: payload.Remarks,
-  },
-  performedBy: payload.ChangedBy,
-});
+    action: 'STATUS_UPDATE',
+    tableName: 'tblRequests',
+    recordId: request.RequestID,
+    oldValue: {
+      Status: oldStatus,
+    },
+    newValue: {
+      Status: newStatus,
+      Remarks: payload.Remarks,
+    },
+    performedBy: payload.ChangedBy,
+  });
 
   return request;
 };
