@@ -18,6 +18,7 @@ const userRoutes = require('./routes/user.routes');
 const requestRoutes = require('./routes/request.routes');
 const auditLogRoutes = require('./routes/auditLog.routes');
 const authRoutes = require('./routes/auth.routes');
+const dashboardRoutes = require('./routes/dashboard.routes');
 
 
 const app = express();
@@ -113,6 +114,13 @@ app.use(
   protect,
   allowRoles('Admin'),
   auditLogRoutes
+);
+
+app.use(
+  '/api/dashboard',
+  protect,
+  allowRoles('Admin', 'Records Officer', 'Viewer'),
+  dashboardRoutes
 );
 
 app.use(errorHandler);
