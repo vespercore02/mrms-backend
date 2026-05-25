@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
+const logger = require('./utils/logger');
 const { protect, allowRoles } = require('./middlewares/authMiddleware');
 const errorHandler = require('./middlewares/errorHandler');
 
@@ -21,7 +22,13 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
-app.use(morgan('dev'));
+app.use(
+  morgan('combined', {
+    stream: {
+      write: (message) => logger.info(message.trim()),
+    },
+  })
+);
 
 app.get('/', (req, res) => {
   res.json({
