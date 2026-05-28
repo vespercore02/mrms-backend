@@ -79,21 +79,26 @@ const bulkCreateDataLists = async (req, res) => {
       DataListRetentionPeriod: row.DataListRetentionPeriod,
     }));
 
-    const createdRecords = await dataListService.bulkCreateDataLists(payload);
+    const result = await dataListService.bulkCreateDataLists(payload);
 
     await ImportLog.create({
-  ModuleName: 'DataList',
-  FileName: req.body.fileName || null,
-  TotalRows: req.body.totalRows || payload.length,
-  ImportedRows: createdRecords.length,
-  SkippedRows: req.body.skippedRows || 0,
-  ImportedBy: req.body.importedBy || null,
-});
+      ModuleName: "DataList",
+      FileName: req.body.fileName || null,
+      TotalRows: req.body.totalRows || rows.length,
+      ImportedRows: result.importedRows,
+      SkippedRows: (req.body.skippedRows || 0) + result.skippedRows,
+      ImportedBy: req.body.importedBy || null,
+    });
 
     return res.status(201).json({
       success: true,
-      message: `${createdRecords.length} data list record(s) imported successfully`,
-      data: createdRecords,
+      message: `${result.importedRows} data list record(s) imported, ${result.skippedRows} duplicate row(s) skipped`,
+      data: {
+        importedRows: result.importedRows,
+        skippedRows: result.skippedRows,
+        duplicateRows: result.duplicateRows,
+        createdRecords: result.createdRecords,
+      },
     });
   } catch (error) {
     return res.status(500).json({
