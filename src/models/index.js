@@ -11,6 +11,7 @@ const Request = require('./Request');
 const RequestStatusHistory = require('./RequestStatusHistory');
 const AuditLog = require('./AuditLog');
 const ImportLog = require('./ImportLog');
+const ImportLogDetail = require('./ImportLogDetail');
 
 require('../relationships');
 
@@ -27,4 +28,5 @@ module.exports = {
   RequestStatusHistory,
   AuditLog,
   ImportLog,
+  ImportLogDetail,
 };

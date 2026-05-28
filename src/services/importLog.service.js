@@ -1,4 +1,4 @@
-const { ImportLog, User } = require('../models');
+const { ImportLog, ImportLogDetail, User } = require('../models');
 
 const getAllImportLogs = async () => {
   return await ImportLog.findAll({
@@ -6,6 +6,9 @@ const getAllImportLogs = async () => {
       {
         model: User,
         attributes: { exclude: ['Password'] },
+      },
+      {
+        model: ImportLogDetail,
       },
     ],
     order: [['createdAt', 'DESC']],

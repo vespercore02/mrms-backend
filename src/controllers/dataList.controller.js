@@ -1,5 +1,5 @@
 const dataListService = require("../services/dataList.service");
-const { ImportLog } = require('../models');
+const { ImportLog, ImportLogDetail } = require("../models");
 
 const getAllDataLists = async (req, res) => {
   try {
@@ -81,7 +81,7 @@ const bulkCreateDataLists = async (req, res) => {
 
     const result = await dataListService.bulkCreateDataLists(payload);
 
-    await ImportLog.create({
+    const importLog = await ImportLog.create({
       ModuleName: "DataList",
       FileName: req.body.fileName || null,
       TotalRows: req.body.totalRows || rows.length,
@@ -89,6 +89,40 @@ const bulkCreateDataLists = async (req, res) => {
       SkippedRows: (req.body.skippedRows || 0) + result.skippedRows,
       ImportedBy: req.body.importedBy || null,
     });
+
+    if (result.duplicateRows.length > 0) {
+      await ImportLogDetail.bulkCreate(
+        result.duplicateRows.map((row) => ({
+          ImportLogID: importLog.ImportLogID,
+          RowNumber: row.rowNumber,
+          AgencyUniqueID: row.AgencyUniqueID,
+          DataListItemNo: row.DataListItemNo,
+          DataListSpecificName: row.DataListSpecificName,
+          DataListPeriodCover: row.DataListPeriodCover,
+          DataListRetentionPeriod: row.DataListRetentionPeriod,
+          Status: "SKIPPED",
+          Reason: row.reason || "Duplicate record already exists",
+        })),
+      );
+    }
+
+    const frontendInvalidRows = req.body.frontendInvalidRows || [];
+
+    if (frontendInvalidRows.length > 0) {
+      await ImportLogDetail.bulkCreate(
+        frontendInvalidRows.map((row) => ({
+          ImportLogID: importLog.ImportLogID,
+          RowNumber: row.rowNumber,
+          AgencyUniqueID: row.AgencyUniqueID,
+          DataListItemNo: row.DataListItemNo,
+          DataListSpecificName: row.DataListSpecificName,
+          DataListPeriodCover: row.DataListPeriodCover,
+          DataListRetentionPeriod: row.DataListRetentionPeriod,
+          Status: "INVALID",
+          Reason: row.reason || "Frontend validation failed",
+        })),
+      );
+    }
 
     return res.status(201).json({
       success: true,

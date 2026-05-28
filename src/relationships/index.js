@@ -11,6 +11,8 @@ const Request = require('../models/Request');
 const RequestStatusHistory = require('../models/RequestStatusHistory');
 const AuditLog = require('../models/AuditLog');
 const ImportLog = require('../models/ImportLog');
+const ImportLogDetail = require('../models/ImportLogDetail');
+
 
 Department.hasMany(Series, { foreignKey: 'DepartmentID' });
 Series.belongsTo(Department, { foreignKey: 'DepartmentID' });
@@ -44,3 +46,6 @@ AuditLog.belongsTo(User, { foreignKey: 'PerformedBy' });
 
 User.hasMany(ImportLog, { foreignKey: 'ImportedBy' });
 ImportLog.belongsTo(User, { foreignKey: 'ImportedBy' });
+
+ImportLog.hasMany(ImportLogDetail, { foreignKey: 'ImportLogID' });
+ImportLogDetail.belongsTo(ImportLog, { foreignKey: 'ImportLogID' });
