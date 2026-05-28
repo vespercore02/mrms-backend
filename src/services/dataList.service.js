@@ -38,10 +38,19 @@ const deleteDataList = async (id) => {
   return dataList;
 };
 
+const bulkCreateDataLists = async (rows) => {
+  const createdRecords = await DataList.bulkCreate(rows, {
+    validate: true,
+  });
+
+  return createdRecords;
+};
+
 module.exports = {
   getAllDataLists,
   getDataListById,
   createDataList,
+  bulkCreateDataLists,
   updateDataList,
   deleteDataList,
 };
