@@ -19,7 +19,7 @@ const requestRoutes = require('./routes/request.routes');
 const auditLogRoutes = require('./routes/auditLog.routes');
 const authRoutes = require('./routes/auth.routes');
 const dashboardRoutes = require('./routes/dashboard.routes');
-
+const importLogRoutes = require('./routes/importLog.routes');
 
 const app = express();
 
@@ -114,6 +114,13 @@ app.use(
   protect,
   allowRoles('Admin'),
   auditLogRoutes
+);
+
+app.use(
+  '/api/import-logs',
+  protect,
+  allowRoles('Admin', 'Records Officer'),
+  importLogRoutes
 );
 
 app.use(

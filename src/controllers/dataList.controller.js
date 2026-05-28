@@ -1,4 +1,5 @@
 const dataListService = require("../services/dataList.service");
+const { ImportLog } = require('../models');
 
 const getAllDataLists = async (req, res) => {
   try {
@@ -79,6 +80,15 @@ const bulkCreateDataLists = async (req, res) => {
     }));
 
     const createdRecords = await dataListService.bulkCreateDataLists(payload);
+
+    await ImportLog.create({
+  ModuleName: 'DataList',
+  FileName: req.body.fileName || null,
+  TotalRows: req.body.totalRows || payload.length,
+  ImportedRows: createdRecords.length,
+  SkippedRows: req.body.skippedRows || 0,
+  ImportedBy: req.body.importedBy || null,
+});
 
     return res.status(201).json({
       success: true,

@@ -10,6 +10,7 @@ const User = require('./User');
 const Request = require('./Request');
 const RequestStatusHistory = require('./RequestStatusHistory');
 const AuditLog = require('./AuditLog');
+const ImportLog = require('./ImportLog');
 
 require('../relationships');
 
@@ -25,4 +26,5 @@ module.exports = {
   Request,
   RequestStatusHistory,
   AuditLog,
+  ImportLog,
 };
