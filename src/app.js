@@ -20,6 +20,7 @@ const auditLogRoutes = require('./routes/auditLog.routes');
 const authRoutes = require('./routes/auth.routes');
 const dashboardRoutes = require('./routes/dashboard.routes');
 const importLogRoutes = require('./routes/importLog.routes');
+const archiveRecordRoutes = require('./routes/archiveRecord.routes');
 
 const app = express();
 
@@ -124,11 +125,20 @@ app.use(
 );
 
 app.use(
+  '/api/archive-records',
+  protect,
+  allowRoles('Admin', 'Records Officer'),
+  archiveRecordRoutes
+);
+
+app.use(
   '/api/dashboard',
   protect,
   allowRoles('Admin', 'Records Officer', 'Viewer'),
   dashboardRoutes
 );
+
+
 
 app.use(errorHandler);
 
