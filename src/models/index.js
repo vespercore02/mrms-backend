@@ -12,6 +12,7 @@ const RequestStatusHistory = require('./RequestStatusHistory');
 const AuditLog = require('./AuditLog');
 const ImportLog = require('./ImportLog');
 const ImportLogDetail = require('./ImportLogDetail');
+const ArchiveRecord = require('./ArchiveRecord');
 
 require('../relationships');
 
@@ -29,4 +30,5 @@ module.exports = {
   AuditLog,
   ImportLog,
   ImportLogDetail,
+  ArchiveRecord,
 };

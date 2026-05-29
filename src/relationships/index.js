@@ -12,6 +12,7 @@ const RequestStatusHistory = require('../models/RequestStatusHistory');
 const AuditLog = require('../models/AuditLog');
 const ImportLog = require('../models/ImportLog');
 const ImportLogDetail = require('../models/ImportLogDetail');
+const ArchiveRecord = require('../models/ArchiveRecord');
 
 
 Department.hasMany(Series, { foreignKey: 'DepartmentID' });
@@ -49,3 +50,21 @@ ImportLog.belongsTo(User, { foreignKey: 'ImportedBy' });
 
 ImportLog.hasMany(ImportLogDetail, { foreignKey: 'ImportLogID' });
 ImportLogDetail.belongsTo(ImportLog, { foreignKey: 'ImportLogID' });
+
+DataList.hasOne(ArchiveRecord, {
+  foreignKey: 'DataListID',
+  onDelete: 'CASCADE',
+  onUpdate: 'CASCADE',
+});
+
+ArchiveRecord.belongsTo(DataList, {
+  foreignKey: 'DataListID',
+});
+
+User.hasMany(ArchiveRecord, {
+  foreignKey: 'ArchivedBy',
+});
+
+ArchiveRecord.belongsTo(User, {
+  foreignKey: 'ArchivedBy',
+});
