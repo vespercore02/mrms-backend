@@ -13,6 +13,7 @@ const AuditLog = require('./AuditLog');
 const ImportLog = require('./ImportLog');
 const ImportLogDetail = require('./ImportLogDetail');
 const ArchiveRecord = require('./ArchiveRecord');
+const ArchiveStatusHistory = require("./ArchiveStatusHistory");
 
 require('../relationships');
 
@@ -31,4 +32,5 @@ module.exports = {
   ImportLog,
   ImportLogDetail,
   ArchiveRecord,
+  ArchiveStatusHistory,
 };

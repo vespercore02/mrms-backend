@@ -1,4 +1,10 @@
-const { ArchiveRecord, DataList, User, AgencyForm } = require('../models');
+const {
+  ArchiveRecord,
+  ArchiveStatusHistory,
+  DataList,
+  User,
+  AgencyForm,
+} = require("../models");
 
 const getAllArchiveRecords = async () => {
   return await ArchiveRecord.findAll({
@@ -8,11 +14,20 @@ const getAllArchiveRecords = async () => {
         include: [AgencyForm],
       },
       {
+        model: ArchiveStatusHistory,
+        include: [
+          {
+            model: User,
+            attributes: { exclude: ["Password"] },
+          },
+        ],
+      },
+      {
         model: User,
-        attributes: { exclude: ['Password'] },
+        attributes: { exclude: ["Password"] },
       },
     ],
-    order: [['createdAt', 'DESC']],
+    order: [["createdAt", "DESC"]],
   });
 };
 
@@ -24,8 +39,17 @@ const getArchiveRecordById = async (id) => {
         include: [AgencyForm],
       },
       {
+        model: ArchiveStatusHistory,
+        include: [
+          {
+            model: User,
+            attributes: { exclude: ["Password"] },
+          },
+        ],
+      },
+      {
         model: User,
-        attributes: { exclude: ['Password'] },
+        attributes: { exclude: ["Password"] },
       },
     ],
   });
@@ -39,7 +63,7 @@ const createArchiveRecord = async (payload) => {
   });
 
   if (existingArchive) {
-    const error = new Error('This data list record is already archived');
+    const error = new Error("This data list record is already archived");
     error.statusCode = 400;
     throw error;
   }
@@ -52,12 +76,22 @@ const updateArchiveStatus = async (id, payload) => {
 
   if (!archiveRecord) return null;
 
+  const oldStatus = archiveRecord.ArchiveStatus;
+
   await archiveRecord.update({
     ArchiveStatus: payload.ArchiveStatus,
     ReviewDate: payload.ReviewDate || archiveRecord.ReviewDate,
     DisposalDate: payload.DisposalDate || archiveRecord.DisposalDate,
     Reason: payload.Reason || archiveRecord.Reason,
     Remarks: payload.Remarks || archiveRecord.Remarks,
+  });
+
+  await ArchiveStatusHistory.create({
+    ArchiveRecordID: archiveRecord.ArchiveRecordID,
+    OldStatus: oldStatus,
+    NewStatus: payload.ArchiveStatus,
+    Remarks: payload.Remarks || null,
+    ChangedBy: payload.ChangedBy || null,
   });
 
   return archiveRecord;
