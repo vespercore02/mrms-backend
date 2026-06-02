@@ -1,13 +1,15 @@
 const allowedStatuses = [
-  'DRAFT',
-  'SUBMITTED',
-  'RECEIVED',
-  'UNDER_REVIEW',
-  'FOR_COMPLIANCE',
-  'APPROVED',
-  'REJECTED',
-  'COMPLETED',
-  'ARCHIVED',
+  "SUBMITTED",
+  "RECEIVED",
+  "UNDER_REVIEW",
+  "FOR_COMPLIANCE",
+  "RESUBMITTED",
+  "NOTICE_OF_INSPECTION",
+  "INSPECTION_DONE",
+  "APPROVED",
+  "COMPLETED",
+  "ARCHIVED",
+  "REJECTED",
 ];
 
 const validateStatus = (req, res, next) => {
@@ -16,14 +18,14 @@ const validateStatus = (req, res, next) => {
   if (!Status) {
     return res.status(400).json({
       success: false,
-      message: 'Status is required',
+      message: "Status is required",
     });
   }
 
   if (!allowedStatuses.includes(Status)) {
     return res.status(400).json({
       success: false,
-      message: 'Invalid status value',
+      message: "Invalid status value",
       allowedStatuses,
     });
   }
