@@ -57,6 +57,44 @@ app.use('/api/auth', authRoutes);
 app.use('/api/users', protect, allowRoles('Admin'), userRoutes);
 app.use('/api/roles', protect, allowRoles('Admin'), roleRoutes);
 
+
+
+app.use(
+  '/api/dashboard',
+  protect,
+  allowRoles('Admin', 'Records Officer', 'Viewer'),
+  dashboardRoutes
+);
+
+app.use(
+  '/api/data-lists',
+  protect,
+  allowRoles('Admin', 'Records Officer', "Viewer"),
+  dataListRoutes
+);
+
+app.use(
+  '/api/file-paths',
+  protect,
+  allowRoles('Admin', 'Records Officer', "Viewer"),
+  filePathRoutes
+);
+
+// Requests
+app.use(
+  '/api/requests',
+  protect,
+  allowRoles('Admin', 'Records Officer', 'Viewer'),
+  requestRoutes
+);
+
+app.use(
+  '/api/archive-records',
+  protect,
+  allowRoles('Admin', 'Records Officer'),
+  archiveRecordRoutes
+);
+
 // Records master data
 app.use(
   '/api/departments',
@@ -87,33 +125,12 @@ app.use(
   agencyFormRoutes
 );
 
-app.use(
-  '/api/data-lists',
-  protect,
-  allowRoles('Admin', 'Records Officer'),
-  dataListRoutes
-);
-
-app.use(
-  '/api/file-paths',
-  protect,
-  allowRoles('Admin', 'Records Officer'),
-  filePathRoutes
-);
-
-// Requests
-app.use(
-  '/api/requests',
-  protect,
-  allowRoles('Admin', 'Records Officer', 'Viewer'),
-  requestRoutes
-);
 
 // Audit logs
 app.use(
   '/api/audit-logs',
   protect,
-  allowRoles('Admin'),
+  allowRoles('Admin', "Record Officer"),
   auditLogRoutes
 );
 
@@ -122,20 +139,6 @@ app.use(
   protect,
   allowRoles('Admin', 'Records Officer'),
   importLogRoutes
-);
-
-app.use(
-  '/api/archive-records',
-  protect,
-  allowRoles('Admin', 'Records Officer'),
-  archiveRecordRoutes
-);
-
-app.use(
-  '/api/dashboard',
-  protect,
-  allowRoles('Admin', 'Records Officer', 'Viewer'),
-  dashboardRoutes
 );
 
 
