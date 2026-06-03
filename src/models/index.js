@@ -18,6 +18,7 @@ const ArchiveStatusHistory = require("./ArchiveStatusHistory");
 const Cabinet = require("./Cabinet");
 const CabinetBay = require("./CabinetBay");
 const StorageBox = require("./StorageBox");
+const BoxRecord = require("./BoxRecord");
 
 require("../relationships");
 
@@ -40,4 +41,5 @@ module.exports = {
   Cabinet,
   CabinetBay,
   StorageBox,
+  BoxRecord,
 };

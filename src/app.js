@@ -25,6 +25,7 @@ const archiveRecordRoutes = require('./routes/archiveRecord.routes');
 const cabinetRoutes = require("./routes/cabinet.routes");
 const cabinetBayRoutes = require("./routes/cabinetBay.routes");
 const storageBoxRoutes = require("./routes/storageBox.routes");
+const boxRecordRoutes = require("./routes/boxRecord.routes");
 
 const app = express();
 
@@ -148,6 +149,7 @@ app.use(
 app.use("/api/cabinets", protect, cabinetRoutes);
 app.use("/api/cabinet-bays", protect, cabinetBayRoutes);
 app.use("/api/storage-boxes", protect, storageBoxRoutes);
+app.use("/api/box-records", protect, boxRecordRoutes);
 
 
 app.use(errorHandler);

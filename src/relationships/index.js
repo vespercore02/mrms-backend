@@ -18,6 +18,7 @@ const ArchiveStatusHistory = require("../models/ArchiveStatusHistory");
 const Cabinet = require("../models/Cabinet");
 const CabinetBay = require("../models/CabinetBay");
 const StorageBox = require("../models/StorageBox");
+const BoxRecord = require("../models/BoxRecord");
 
 Department.hasMany(Series, { foreignKey: "DepartmentID" });
 Series.belongsTo(Department, { foreignKey: "DepartmentID" });
@@ -122,4 +123,35 @@ Department.hasMany(StorageBox, {
 
 StorageBox.belongsTo(Department, {
   foreignKey: "DepartmentID",
+});
+
+
+StorageBox.hasMany(BoxRecord, {
+  foreignKey: "StorageBoxID",
+  onDelete: "CASCADE",
+  onUpdate: "CASCADE",
+});
+
+BoxRecord.belongsTo(StorageBox, {
+  foreignKey: "StorageBoxID",
+});
+
+DataList.hasMany(BoxRecord, {
+  foreignKey: "DataListID",
+  onDelete: "CASCADE",
+  onUpdate: "CASCADE",
+});
+
+BoxRecord.belongsTo(DataList, {
+  foreignKey: "DataListID",
+});
+
+Request.hasMany(BoxRecord, {
+  foreignKey: "RequestID",
+  onDelete: "SET NULL",
+  onUpdate: "CASCADE",
+});
+
+BoxRecord.belongsTo(Request, {
+  foreignKey: "RequestID",
 });
