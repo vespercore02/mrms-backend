@@ -1,21 +1,24 @@
-const Department = require('./Department');
-const Series = require('./Series');
-const Specific = require('./Specific');
-const AgencyForm = require('./AgencyForm');
-const DataList = require('./DataList');
-const FilePath = require('./FilePath');
+const Department = require("./Department");
+const Series = require("./Series");
+const Specific = require("./Specific");
+const AgencyForm = require("./AgencyForm");
+const DataList = require("./DataList");
+const FilePath = require("./FilePath");
 
-const Role = require('./Role');
-const User = require('./User');
-const Request = require('./Request');
-const RequestStatusHistory = require('./RequestStatusHistory');
-const AuditLog = require('./AuditLog');
-const ImportLog = require('./ImportLog');
-const ImportLogDetail = require('./ImportLogDetail');
-const ArchiveRecord = require('./ArchiveRecord');
+const Role = require("./Role");
+const User = require("./User");
+const Request = require("./Request");
+const RequestStatusHistory = require("./RequestStatusHistory");
+const AuditLog = require("./AuditLog");
+const ImportLog = require("./ImportLog");
+const ImportLogDetail = require("./ImportLogDetail");
+const ArchiveRecord = require("./ArchiveRecord");
 const ArchiveStatusHistory = require("./ArchiveStatusHistory");
 
-require('../relationships');
+const Cabinet = require("./Cabinet");
+const CabinetBay = require("./CabinetBay");
+
+require("../relationships");
 
 module.exports = {
   Department,
@@ -33,4 +36,6 @@ module.exports = {
   ImportLogDetail,
   ArchiveRecord,
   ArchiveStatusHistory,
+  Cabinet,
+  CabinetBay,
 };
