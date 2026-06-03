@@ -23,6 +23,7 @@ const importLogRoutes = require('./routes/importLog.routes');
 const archiveRecordRoutes = require('./routes/archiveRecord.routes');
 
 const cabinetRoutes = require("./routes/cabinet.routes");
+const cabinetBayRoutes = require("./routes/cabinetBay.routes");
 
 const app = express();
 
@@ -144,7 +145,7 @@ app.use(
 );
 
 app.use("/api/cabinets", protect, cabinetRoutes);
-
+app.use("/api/cabinet-bays", protect, cabinetBayRoutes);
 
 
 app.use(errorHandler);
