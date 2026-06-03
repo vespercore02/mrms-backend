@@ -22,6 +22,8 @@ const dashboardRoutes = require('./routes/dashboard.routes');
 const importLogRoutes = require('./routes/importLog.routes');
 const archiveRecordRoutes = require('./routes/archiveRecord.routes');
 
+const cabinetRoutes = require("./routes/cabinet.routes");
+
 const app = express();
 
 app.use(cors());
@@ -140,6 +142,8 @@ app.use(
   allowRoles('Admin', 'Records Officer'),
   importLogRoutes
 );
+
+app.use("/api/cabinets", protect, cabinetRoutes);
 
 
 
