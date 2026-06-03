@@ -8,7 +8,12 @@ const buildBoxCode = (bayCode, boxNumber) => {
   return `${bayCode}-BX${formatNumber(boxNumber)}`;
 };
 
-const calculateBayStatus = ({ currentWeight, maxWeight, currentBoxes, maxBoxes }) => {
+const calculateBayStatus = ({
+  currentWeight,
+  maxWeight,
+  currentBoxes,
+  maxBoxes,
+}) => {
   if (currentWeight > maxWeight) return "OVERWEIGHT";
   if (currentBoxes >= maxBoxes) return "FULL";
 
@@ -49,6 +54,18 @@ const recomputeBayCapacity = async (cabinetBayId) => {
   });
 
   return bay;
+};
+
+const getNextAvailableBoxNumber = (boxes, maxBoxes) => {
+  const usedNumbers = boxes.map((box) => Number(box.BoxNumber));
+
+  for (let i = 1; i <= maxBoxes; i++) {
+    if (!usedNumbers.includes(i)) {
+      return i;
+    }
+  }
+
+  return null;
 };
 
 const getAllStorageBoxes = async (query = {}) => {
@@ -120,20 +137,32 @@ const createStorageBox = async (payload) => {
   const maxBoxes = Number(bay.MaxBoxes);
 
   if (currentBoxes + 1 > maxBoxes) {
-    const error = new Error(`Bay box capacity exceeded. Max boxes: ${maxBoxes}`);
+    const error = new Error(
+      `Bay box capacity exceeded. Max boxes: ${maxBoxes}`,
+    );
     error.statusCode = 400;
     throw error;
   }
 
   if (currentWeight + newWeight > maxWeight) {
     const error = new Error(
-      `Bay weight limit exceeded. Current: ${currentWeight}kg, New: ${newWeight}kg, Max: ${maxWeight}kg`
+      `Bay weight limit exceeded. Current: ${currentWeight}kg, New: ${newWeight}kg, Max: ${maxWeight}kg`,
     );
     error.statusCode = 400;
     throw error;
   }
 
-  const boxNumber = payload.BoxNumber || currentBoxes + 1;
+  const boxNumber =
+    payload.BoxNumber || getNextAvailableBoxNumber(existingBoxes, maxBoxes);
+
+  if (!boxNumber) {
+    const error = new Error(
+      `No available box slot in this bay. Max boxes: ${maxBoxes}`,
+    );
+    error.statusCode = 400;
+    throw error;
+  }
+
   const boxCode = payload.BoxCode || buildBoxCode(bay.BayCode, boxNumber);
 
   const existingBoxCode = await StorageBox.findOne({
@@ -190,7 +219,7 @@ const updateStorageBox = async (id, payload) => {
 
   if (otherBoxesWeight + newWeight > Number(bay.MaxWeightKg)) {
     const error = new Error(
-      `Bay weight limit exceeded. Other boxes: ${otherBoxesWeight}kg, New: ${newWeight}kg, Max: ${bay.MaxWeightKg}kg`
+      `Bay weight limit exceeded. Other boxes: ${otherBoxesWeight}kg, New: ${newWeight}kg, Max: ${bay.MaxWeightKg}kg`,
     );
     error.statusCode = 400;
     throw error;
