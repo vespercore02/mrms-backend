@@ -1,4 +1,4 @@
-const userService = require('../services/user.service');
+const userService = require("../services/user.service");
 
 const removePassword = (user) => {
   const plainUser = user.toJSON();
@@ -17,7 +17,7 @@ const getAllUsers = async (req, res) => {
   } catch (error) {
     return res.status(500).json({
       success: false,
-      message: 'Failed to fetch users',
+      message: "Failed to fetch users",
       error: error.message,
     });
   }
@@ -30,7 +30,7 @@ const getUserById = async (req, res) => {
     if (!user) {
       return res.status(404).json({
         success: false,
-        message: 'User not found',
+        message: "User not found",
       });
     }
 
@@ -41,7 +41,7 @@ const getUserById = async (req, res) => {
   } catch (error) {
     return res.status(500).json({
       success: false,
-      message: 'Failed to fetch user',
+      message: "Failed to fetch user",
       error: error.message,
     });
   }
@@ -53,13 +53,13 @@ const createUser = async (req, res) => {
 
     return res.status(201).json({
       success: true,
-      message: 'User created successfully',
+      message: "User created successfully",
       data: removePassword(user),
     });
   } catch (error) {
     return res.status(500).json({
       success: false,
-      message: 'Failed to create user',
+      message: "Failed to create user",
       error: error.message,
     });
   }
@@ -72,19 +72,21 @@ const updateUser = async (req, res) => {
     if (!user) {
       return res.status(404).json({
         success: false,
-        message: 'User not found',
+        message: "User not found",
       });
     }
 
+    const updatedUser = await userService.getUserById(req.params.id);
+
     return res.status(200).json({
       success: true,
-      message: 'User updated successfully',
-      data: removePassword(user),
+      message: "User updated successfully",
+      data: updatedUser,
     });
   } catch (error) {
     return res.status(500).json({
       success: false,
-      message: 'Failed to update user',
+      message: "Failed to update user",
       error: error.message,
     });
   }
@@ -97,18 +99,18 @@ const deleteUser = async (req, res) => {
     if (!user) {
       return res.status(404).json({
         success: false,
-        message: 'User not found',
+        message: "User not found",
       });
     }
 
     return res.status(200).json({
       success: true,
-      message: 'User deleted successfully',
+      message: "User deleted successfully",
     });
   } catch (error) {
     return res.status(500).json({
       success: false,
-      message: 'Failed to delete user',
+      message: "Failed to delete user",
       error: error.message,
     });
   }

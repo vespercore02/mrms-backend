@@ -47,12 +47,7 @@ app.get("/", (req, res) => {
 app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 
 
-app.use(
-  "/api/audit-logs",
-  protect,
-  allowRoles("Admin", "Records Officer"),
-  auditLogRoutes,
-);
+app.use("/api/auth", authRoutes);
 
 // Public muna habang dev, or protect later
 app.use("/api/users", protect, allowRoles("Admin"), userRoutes);
