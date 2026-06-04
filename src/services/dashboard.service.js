@@ -7,6 +7,10 @@ const {
   DataList,
   ArchiveRecord,
   ImportLog,
+  Cabinet,
+  CabinetBay,
+  StorageBox,
+  BoxRecord,
 } = require("../models");
 
 const getDashboardSummary = async () => {
@@ -30,6 +34,15 @@ const getDashboardSummary = async () => {
     forReviewArchives,
     forDisposalArchives,
     totalImportLogs,
+    totalCabinets,
+    totalCabinetBays,
+    availableBays,
+    nearFullBays,
+    fullBays,
+    overweightBays,
+    maintenanceBays,
+    totalStorageBoxes,
+    totalBoxRecords,
   ] = await Promise.all([
     Request.count(),
     Request.count({ where: { Status: "SUBMITTED" } }),
@@ -50,6 +63,15 @@ const getDashboardSummary = async () => {
     ArchiveRecord.count({ where: { ArchiveStatus: "FOR_REVIEW" } }),
     ArchiveRecord.count({ where: { ArchiveStatus: "FOR_DISPOSAL" } }),
     ImportLog.count(),
+    Cabinet.count(),
+    CabinetBay.count(),
+    CabinetBay.count({ where: { Status: "AVAILABLE" } }),
+    CabinetBay.count({ where: { Status: "NEAR_FULL" } }),
+    CabinetBay.count({ where: { Status: "FULL" } }),
+    CabinetBay.count({ where: { Status: "OVERWEIGHT" } }),
+    CabinetBay.count({ where: { Status: "MAINTENANCE" } }),
+    StorageBox.count(),
+    BoxRecord.count(),
   ]);
 
   return {
@@ -77,6 +99,17 @@ const getDashboardSummary = async () => {
     archiveStatus: {
       forReview: forReviewArchives,
       forDisposal: forDisposalArchives,
+    },
+    storage: {
+      cabinets: totalCabinets,
+      cabinetBays: totalCabinetBays,
+      availableBays,
+      nearFullBays,
+      fullBays,
+      overweightBays,
+      maintenanceBays,
+      storageBoxes: totalStorageBoxes,
+      storedRecords: totalBoxRecords,
     },
   };
 };

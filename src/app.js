@@ -1,26 +1,25 @@
-const express = require('express');
-const cors = require('cors');
-const morgan = require('morgan');
-const logger = require('./utils/logger');
-const { protect, allowRoles } = require('./middlewares/authMiddleware');
-const errorHandler = require('./middlewares/errorHandler');
-const path = require('path');
+const express = require("express");
+const cors = require("cors");
+const morgan = require("morgan");
+const logger = require("./utils/logger");
+const { protect, allowRoles } = require("./middlewares/authMiddleware");
+const errorHandler = require("./middlewares/errorHandler");
+const path = require("path");
 
-
-const departmentRoutes = require('./routes/department.routes');
-const seriesRoutes = require('./routes/series.routes');
-const specificRoutes = require('./routes/specific.routes');
-const agencyFormRoutes = require('./routes/agencyForm.routes');
-const dataListRoutes = require('./routes/dataList.routes');
-const filePathRoutes = require('./routes/filePath.routes');
-const roleRoutes = require('./routes/role.routes');
-const userRoutes = require('./routes/user.routes');
-const requestRoutes = require('./routes/request.routes');
-const auditLogRoutes = require('./routes/auditLog.routes');
-const authRoutes = require('./routes/auth.routes');
-const dashboardRoutes = require('./routes/dashboard.routes');
-const importLogRoutes = require('./routes/importLog.routes');
-const archiveRecordRoutes = require('./routes/archiveRecord.routes');
+const departmentRoutes = require("./routes/department.routes");
+const seriesRoutes = require("./routes/series.routes");
+const specificRoutes = require("./routes/specific.routes");
+const agencyFormRoutes = require("./routes/agencyForm.routes");
+const dataListRoutes = require("./routes/dataList.routes");
+const filePathRoutes = require("./routes/filePath.routes");
+const roleRoutes = require("./routes/role.routes");
+const userRoutes = require("./routes/user.routes");
+const requestRoutes = require("./routes/request.routes");
+const auditLogRoutes = require("./routes/auditLog.routes");
+const authRoutes = require("./routes/auth.routes");
+const dashboardRoutes = require("./routes/dashboard.routes");
+const importLogRoutes = require("./routes/importLog.routes");
+const archiveRecordRoutes = require("./routes/archiveRecord.routes");
 
 const cabinetRoutes = require("./routes/cabinet.routes");
 const cabinetBayRoutes = require("./routes/cabinetBay.routes");
@@ -32,125 +31,138 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(
-  morgan('combined', {
+  morgan("combined", {
     stream: {
       write: (message) => logger.info(message.trim()),
     },
-  })
+  }),
 );
 
-app.get('/', (req, res) => {
+app.get("/", (req, res) => {
   res.json({
-    message: 'MRMS API is running',
+    message: "MRMS API is running",
   });
 });
 
+app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 
-app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
-app.use('/api/departments', protect, departmentRoutes);
-app.use('/api/series', protect, seriesRoutes);
-app.use('/api/specifics', protect, specificRoutes);
-app.use('/api/agency-forms', protect, agencyFormRoutes);
-app.use('/api/data-lists', protect, dataListRoutes);
-app.use('/api/file-paths', protect, filePathRoutes);
-app.use('/api/requests', protect, requestRoutes);
-app.use('/api/audit-logs', protect, auditLogRoutes);
-app.use('/api/auth', authRoutes);
+app.use(
+  "/api/audit-logs",
+  protect,
+  allowRoles("Admin", "Records Officer"),
+  auditLogRoutes,
+);
 
 // Public muna habang dev, or protect later
-app.use('/api/users', protect, allowRoles('Admin'), userRoutes);
-app.use('/api/roles', protect, allowRoles('Admin'), roleRoutes);
-
-
+app.use("/api/users", protect, allowRoles("Admin"), userRoutes);
+app.use("/api/roles", protect, allowRoles("Admin"), roleRoutes);
 
 app.use(
-  '/api/dashboard',
+  "/api/dashboard",
   protect,
-  allowRoles('Admin', 'Records Officer', 'Viewer'),
-  dashboardRoutes
+  allowRoles("Admin", "Records Officer", "Viewer"),
+  dashboardRoutes,
 );
 
 app.use(
-  '/api/data-lists',
+  "/api/data-lists",
   protect,
-  allowRoles('Admin', 'Records Officer', "Viewer"),
-  dataListRoutes
+  allowRoles("Admin", "Records Officer", "Viewer"),
+  dataListRoutes,
 );
 
 app.use(
-  '/api/file-paths',
+  "/api/file-paths",
   protect,
-  allowRoles('Admin', 'Records Officer', "Viewer"),
-  filePathRoutes
+  allowRoles("Admin", "Records Officer", "Viewer"),
+  filePathRoutes,
 );
 
 // Requests
 app.use(
-  '/api/requests',
+  "/api/requests",
   protect,
-  allowRoles('Admin', 'Records Officer', 'Viewer'),
-  requestRoutes
+  allowRoles("Admin", "Records Officer", "Viewer"),
+  requestRoutes,
 );
 
 app.use(
-  '/api/archive-records',
+  "/api/archive-records",
   protect,
-  allowRoles('Admin', 'Records Officer'),
-  archiveRecordRoutes
+  allowRoles("Admin", "Records Officer"),
+  archiveRecordRoutes,
 );
 
 // Records master data
 app.use(
-  '/api/departments',
+  "/api/departments",
   protect,
-  allowRoles('Admin', 'Records Officer'),
-  departmentRoutes
+  allowRoles("Admin", "Records Officer"),
+  departmentRoutes,
 );
 
 app.use(
-  '/api/series',
+  "/api/series",
   protect,
-  allowRoles('Admin', 'Records Officer'),
-  seriesRoutes
+  allowRoles("Admin", "Records Officer"),
+  seriesRoutes,
 );
 
 app.use(
-  '/api/specifics',
+  "/api/specifics",
   protect,
-  allowRoles('Admin', 'Records Officer'),
-  specificRoutes
+  allowRoles("Admin", "Records Officer"),
+  specificRoutes,
 );
 
 // Agency records
 app.use(
-  '/api/agency-forms',
+  "/api/agency-forms",
   protect,
-  allowRoles('Admin', 'Records Officer'),
-  agencyFormRoutes
+  allowRoles("Admin", "Records Officer"),
+  agencyFormRoutes,
 );
-
 
 // Audit logs
 app.use(
-  '/api/audit-logs',
+  "/api/audit-logs",
   protect,
-  allowRoles('Admin', "Record Officer"),
-  auditLogRoutes
+  allowRoles("Admin", "Record Officer"),
+  auditLogRoutes,
 );
 
 app.use(
-  '/api/import-logs',
+  "/api/import-logs",
   protect,
-  allowRoles('Admin', 'Records Officer'),
-  importLogRoutes
+  allowRoles("Admin", "Records Officer"),
+  importLogRoutes,
 );
 
-app.use("/api/cabinets", protect, cabinetRoutes);
-app.use("/api/cabinet-bays", protect, cabinetBayRoutes);
-app.use("/api/storage-boxes", protect, storageBoxRoutes);
-app.use("/api/box-records", protect, boxRecordRoutes);
-
+app.use(
+  "/api/cabinets",
+  protect,
+  allowRoles("Admin", "Records Officer"),
+  cabinetRoutes,
+);
+app.use(
+  "/api/cabinet-bays",
+  protect,
+  allowRoles("Admin", "Records Officer"),
+  cabinetBayRoutes,
+);
+app.use(
+  "/api/storage-boxes",
+  protect,
+  allowRoles("Admin", "Records Officer"),
+  storageBoxRoutes,
+);
+app.use(
+  "/api/box-records",
+  protect,
+  allowRoles("Admin", "Records Officer"),
+  boxRecordRoutes,
+);
 
 app.use(errorHandler);
 
