@@ -1,5 +1,5 @@
-const requestService = require('../services/request.service');
-const asyncHandler = require('../utils/asyncHandler');
+const requestService = require("../services/request.service");
+const asyncHandler = require("../utils/asyncHandler");
 
 const getAllRequests = asyncHandler(async (req, res) => {
   const requests = await requestService.getAllRequests(req.query);
@@ -14,7 +14,7 @@ const getRequestById = asyncHandler(async (req, res) => {
   const request = await requestService.getRequestById(req.params.id);
 
   if (!request) {
-    const error = new Error('Request not found');
+    const error = new Error("Request not found");
     error.statusCode = 404;
     throw error;
   }
@@ -30,7 +30,7 @@ const createRequest = asyncHandler(async (req, res) => {
 
   return res.status(201).json({
     success: true,
-    message: 'Request created successfully',
+    message: "Request created successfully",
     data: request,
   });
 });
@@ -39,14 +39,14 @@ const updateRequest = asyncHandler(async (req, res) => {
   const request = await requestService.updateRequest(req.params.id, req.body);
 
   if (!request) {
-    const error = new Error('Request not found');
+    const error = new Error("Request not found");
     error.statusCode = 404;
     throw error;
   }
 
   return res.status(200).json({
     success: true,
-    message: 'Request updated successfully',
+    message: "Request updated successfully",
     data: request,
   });
 });
@@ -54,18 +54,18 @@ const updateRequest = asyncHandler(async (req, res) => {
 const updateRequestStatus = asyncHandler(async (req, res) => {
   const request = await requestService.updateRequestStatus(
     req.params.id,
-    req.body
+    req.body,
   );
 
   if (!request) {
-    const error = new Error('Request not found');
+    const error = new Error("Request not found");
     error.statusCode = 404;
     throw error;
   }
 
   return res.status(200).json({
     success: true,
-    message: 'Request status updated successfully',
+    message: "Request status updated successfully",
     data: request,
   });
 });
@@ -74,16 +74,45 @@ const deleteRequest = asyncHandler(async (req, res) => {
   const request = await requestService.deleteRequest(req.params.id);
 
   if (!request) {
-    const error = new Error('Request not found');
+    const error = new Error("Request not found");
     error.statusCode = 404;
     throw error;
   }
 
   return res.status(200).json({
     success: true,
-    message: 'Request deleted successfully',
+    message: "Request deleted successfully",
   });
 });
+
+const submitDraftRequest = async (req, res) => {
+  try {
+    const userId = req.user?.UserID;
+
+    const request = await requestService.submitDraftRequest(
+      req.params.id,
+      userId,
+    );
+
+    if (!request) {
+      return res.status(404).json({
+        success: false,
+        message: "Request not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Draft request submitted successfully",
+      data: request,
+    });
+  } catch (error) {
+    return res.status(error.statusCode || 500).json({
+      success: false,
+      message: error.message || "Failed to submit draft request",
+    });
+  }
+};
 
 module.exports = {
   getAllRequests,
@@ -92,4 +121,5 @@ module.exports = {
   updateRequest,
   updateRequestStatus,
   deleteRequest,
+  submitDraftRequest,
 };

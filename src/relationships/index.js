@@ -26,7 +26,6 @@ const RequestRequiredForm = require("../models/RequestRequiredForm");
 const RequestForm = require("../models/RequestForm");
 
 
-
 Department.hasMany(User, {
   foreignKey: "DepartmentID",
   onDelete: "SET NULL",
@@ -196,6 +195,18 @@ Request.hasMany(RequestForm, {
   foreignKey: "RequestID",
   onDelete: "CASCADE",
   onUpdate: "CASCADE",
+});
+
+RequestType.hasMany(Request, {
+  foreignKey: "RequestTypeID",
+  as: "Requests",
+  onDelete: "SET NULL",
+  onUpdate: "CASCADE",
+});
+
+Request.belongsTo(RequestType, {
+  foreignKey: "RequestTypeID",
+  as: "RequestTypeInfo",
 });
 
 RequestForm.belongsTo(Request, {

@@ -18,6 +18,10 @@ const Request = sequelize.define(
       type: DataTypes.STRING(150),
       allowNull: false,
     },
+    RequestTypeID: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+    },
     AgencyUniqueID: {
       type: DataTypes.STRING(100),
     },
@@ -27,19 +31,19 @@ const Request = sequelize.define(
     },
     Status: {
       type: DataTypes.ENUM(
+        "DRAFT",
         "SUBMITTED",
         "RECEIVED",
         "UNDER_REVIEW",
         "FOR_COMPLIANCE",
         "RESUBMITTED",
-        "NOTICE_OF_INSPECTION",
-        "INSPECTION_DONE",
         "APPROVED",
+        "REJECTED",
         "COMPLETED",
         "ARCHIVED",
-        "REJECTED",
       ),
-      defaultValue: "SUBMITTED",
+      allowNull: false,
+      defaultValue: "DRAFT",
     },
     Remarks: {
       type: DataTypes.TEXT,

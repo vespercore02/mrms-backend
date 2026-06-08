@@ -16,6 +16,8 @@ router.post(
 
 router.put('/:id', requestController.updateRequest);
 
+router.patch("/:id/submit", requestController.submitDraftRequest);
+
 router.patch(
   '/:id/status',
   validateRequest(['Status', 'ChangedBy']),

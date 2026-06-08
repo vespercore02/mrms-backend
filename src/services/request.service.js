@@ -1,20 +1,69 @@
-const createAuditLog = require('../utils/auditLogger');
-const { canTransitionStatus } = require('../utils/workflowRules');
-const { Op } = require('sequelize');
-const { getPagination, getPagingData } = require('../utils/pagination');
+const createAuditLog = require("../utils/auditLogger");
+const { canTransitionStatus } = require("../utils/workflowRules");
+const { Op } = require("sequelize");
+const { getPagination, getPagingData } = require("../utils/pagination");
 
 const {
   Request,
   RequestStatusHistory,
   User,
   AgencyForm,
-} = require('../models');
+} = require("../models");
+
+const allowedStatusTransitions = {
+  DRAFT: ["SUBMITTED"],
+  SUBMITTED: ["RECEIVED", "REJECTED"],
+  RECEIVED: ["UNDER_REVIEW", "REJECTED"],
+  UNDER_REVIEW: ["FOR_COMPLIANCE", "APPROVED", "REJECTED"],
+  FOR_COMPLIANCE: ["RESUBMITTED", "REJECTED"],
+  RESUBMITTED: ["UNDER_REVIEW", "APPROVED", "REJECTED"],
+  APPROVED: ["COMPLETED"],
+  COMPLETED: ["ARCHIVED"],
+  REJECTED: ["RESUBMITTED"],
+  ARCHIVED: [],
+};
+
+const validateStatusTransition = (currentStatus, nextStatus) => {
+  const allowedNextStatuses = allowedStatusTransitions[currentStatus] || [];
+
+  if (!allowedNextStatuses.includes(nextStatus)) {
+    const error = new Error(
+      `Invalid status transition from ${currentStatus} to ${nextStatus}`,
+    );
+    error.statusCode = 400;
+    throw error;
+  }
+};
+
+const submitDraftRequest = async (id, userId) => {
+  const request = await Request.findByPk(id);
+
+  if (!request) return null;
+
+  validateStatusTransition(request.Status, "SUBMITTED");
+
+  await request.update({
+    Status: "SUBMITTED",
+  });
+
+  await RequestStatusHistory.create({
+    RequestID: request.RequestID,
+    OldStatus: "DRAFT",
+    NewStatus: "SUBMITTED",
+    ChangedBy: userId || null,
+    Remarks: "Draft request submitted",
+  });
+
+  return request;
+};
+
+
 
 const generateRequestCode = () => {
   const date = new Date();
   const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, '0');
-  const d = String(date.getDate()).padStart(2, '0');
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
   const random = Math.floor(1000 + Math.random() * 9000);
 
   return `REQ-${y}${m}${d}-${random}`;
@@ -48,13 +97,14 @@ const getAllRequests = async (query) => {
     include: [
       {
         model: User,
-        as: 'requester',
-        attributes: { exclude: ['Password'] },
+        as: "requester",
+        attributes: { exclude: ["Password"] },
       },
+      RequestType,
       AgencyForm,
       RequestStatusHistory,
     ],
-    order: [['createdAt', 'DESC']],
+    order: [["createdAt", "DESC"]],
     limit,
     offset,
     distinct: true,
@@ -68,9 +118,10 @@ const getRequestById = async (id) => {
     include: [
       {
         model: User,
-        as: 'requester',
-        attributes: { exclude: ['Password'] },
+        as: "requester",
+        attributes: { exclude: ["Password"] },
       },
+      RequestType,
       AgencyForm,
       RequestStatusHistory,
     ],
@@ -85,7 +136,8 @@ const createRequest = async (payload) => {
     RequestType: payload.RequestType,
     AgencyUniqueID: payload.AgencyUniqueID,
     RequestedBy: payload.RequestedBy,
-    Status: payload.Status || 'SUBMITTED',
+    RequestTypeID: payload.RequestTypeID || null,
+    Status: payload.Status || "DRAFT",
     Remarks: payload.Remarks,
   });
 
@@ -94,17 +146,17 @@ const createRequest = async (payload) => {
     OldStatus: null,
     NewStatus: request.Status,
     ChangedBy: payload.RequestedBy,
-    Remarks: 'Request created',
+    Remarks: "Request created",
   });
 
   await createAuditLog({
-  action: 'CREATE',
-  tableName: 'tblRequests',
-  recordId: request.RequestID,
-  oldValue: null,
-  newValue: request.toJSON(),
-  performedBy: payload.RequestedBy,
-});
+    action: "CREATE",
+    tableName: "tblRequests",
+    recordId: request.RequestID,
+    oldValue: null,
+    newValue: request.toJSON(),
+    performedBy: payload.RequestedBy,
+  });
 
   return request;
 };
@@ -129,7 +181,9 @@ const updateRequestStatus = async (id, payload) => {
   const isAllowed = canTransitionStatus(oldStatus, newStatus);
 
   if (!isAllowed) {
-    const error = new Error(`Invalid status transition: ${oldStatus} to ${newStatus}`);
+    const error = new Error(
+      `Invalid status transition: ${oldStatus} to ${newStatus}`,
+    );
     error.statusCode = 400;
     throw error;
   }
@@ -148,8 +202,8 @@ const updateRequestStatus = async (id, payload) => {
   });
 
   await createAuditLog({
-    action: 'STATUS_UPDATE',
-    tableName: 'tblRequests',
+    action: "STATUS_UPDATE",
+    tableName: "tblRequests",
     recordId: request.RequestID,
     oldValue: {
       Status: oldStatus,
@@ -180,4 +234,5 @@ module.exports = {
   updateRequest,
   updateRequestStatus,
   deleteRequest,
+  submitDraftRequest,
 };
