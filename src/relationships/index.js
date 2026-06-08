@@ -23,6 +23,7 @@ const BoxRecord = require("../models/BoxRecord");
 const RequestType = require("../models/RequestType");
 const RequestFormType = require("../models/RequestFormType");
 const RequestRequiredForm = require("../models/RequestRequiredForm");
+const RequestForm = require("../models/RequestForm");
 
 
 
@@ -189,4 +190,60 @@ RequestFormType.hasMany(RequestRequiredForm, {
 
 RequestRequiredForm.belongsTo(RequestFormType, {
   foreignKey: "RequestFormTypeID",
+});
+
+Request.hasMany(RequestForm, {
+  foreignKey: "RequestID",
+  onDelete: "CASCADE",
+  onUpdate: "CASCADE",
+});
+
+RequestForm.belongsTo(Request, {
+  foreignKey: "RequestID",
+});
+
+RequestFormType.hasMany(RequestForm, {
+  foreignKey: "RequestFormTypeID",
+  onDelete: "CASCADE",
+  onUpdate: "CASCADE",
+});
+
+RequestForm.belongsTo(RequestFormType, {
+  foreignKey: "RequestFormTypeID",
+});
+
+User.hasMany(RequestForm, {
+  foreignKey: "PreparedBy",
+  as: "PreparedForms",
+  onDelete: "SET NULL",
+  onUpdate: "CASCADE",
+});
+
+RequestForm.belongsTo(User, {
+  foreignKey: "PreparedBy",
+  as: "PreparedUser",
+});
+
+User.hasMany(RequestForm, {
+  foreignKey: "ReviewedBy",
+  as: "ReviewedForms",
+  onDelete: "SET NULL",
+  onUpdate: "CASCADE",
+});
+
+RequestForm.belongsTo(User, {
+  foreignKey: "ReviewedBy",
+  as: "ReviewedUser",
+});
+
+User.hasMany(RequestForm, {
+  foreignKey: "ApprovedBy",
+  as: "ApprovedForms",
+  onDelete: "SET NULL",
+  onUpdate: "CASCADE",
+});
+
+RequestForm.belongsTo(User, {
+  foreignKey: "ApprovedBy",
+  as: "ApprovedUser",
 });

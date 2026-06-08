@@ -23,6 +23,7 @@ const BoxRecord = require("./BoxRecord");
 const RequestType = require("./RequestType");
 const RequestFormType = require("./RequestFormType");
 const RequestRequiredForm = require("./RequestRequiredForm");
+const RequestForm = require("./RequestForm");
 
 require("../relationships");
 
@@ -47,6 +48,7 @@ module.exports = {
   StorageBox,
   BoxRecord,
   RequestType,
-RequestFormType,
-RequestRequiredForm,
+  RequestFormType,
+  RequestRequiredForm,
+  RequestForm,
 };

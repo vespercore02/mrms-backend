@@ -27,6 +27,7 @@ const storageBoxRoutes = require("./routes/storageBox.routes");
 const boxRecordRoutes = require("./routes/boxRecord.routes");
 
 const requestV2FoundationRoutes = require("./routes/requestV2Foundation.routes");
+const requestFormRoutes = require("./routes/requestForm.routes");
 
 const app = express();
 
@@ -197,6 +198,19 @@ app.use(
     "Viewer"
   ),
   requestV2FoundationRoutes
+);
+
+app.use(
+  "/api/request-forms",
+  protect,
+  allowRoles(
+    "Admin",
+    "Records Head",
+    "Records Officer",
+    "Department Head",
+    "Department Custodian"
+  ),
+  requestFormRoutes
 );
 
 app.use(errorHandler);
