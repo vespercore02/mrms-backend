@@ -20,6 +20,10 @@ const CabinetBay = require("./CabinetBay");
 const StorageBox = require("./StorageBox");
 const BoxRecord = require("./BoxRecord");
 
+const RequestType = require("./RequestType");
+const RequestFormType = require("./RequestFormType");
+const RequestRequiredForm = require("./RequestRequiredForm");
+
 require("../relationships");
 
 module.exports = {
@@ -42,4 +46,7 @@ module.exports = {
   CabinetBay,
   StorageBox,
   BoxRecord,
+  RequestType,
+RequestFormType,
+RequestRequiredForm,
 };

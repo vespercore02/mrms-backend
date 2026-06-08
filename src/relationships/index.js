@@ -20,6 +20,10 @@ const CabinetBay = require("../models/CabinetBay");
 const StorageBox = require("../models/StorageBox");
 const BoxRecord = require("../models/BoxRecord");
 
+const RequestType = require("../models/RequestType");
+const RequestFormType = require("../models/RequestFormType");
+const RequestRequiredForm = require("../models/RequestRequiredForm");
+
 
 
 Department.hasMany(User, {
@@ -165,4 +169,24 @@ Request.hasMany(BoxRecord, {
 
 BoxRecord.belongsTo(Request, {
   foreignKey: "RequestID",
+});
+
+RequestType.hasMany(RequestRequiredForm, {
+  foreignKey: "RequestTypeID",
+  onDelete: "CASCADE",
+  onUpdate: "CASCADE",
+});
+
+RequestRequiredForm.belongsTo(RequestType, {
+  foreignKey: "RequestTypeID",
+});
+
+RequestFormType.hasMany(RequestRequiredForm, {
+  foreignKey: "RequestFormTypeID",
+  onDelete: "CASCADE",
+  onUpdate: "CASCADE",
+});
+
+RequestRequiredForm.belongsTo(RequestFormType, {
+  foreignKey: "RequestFormTypeID",
 });
