@@ -8,7 +8,8 @@
     "start": "node src/server.js",
     "seed:admin": "node src/seeders/seedAdmin.js",
     "seed:cabinets": "node src/seeders/seedCabinets.js",
-    "seed:roles": "node src/seeders/seedRoles.js"
+    "seed:roles": "node src/seeders/seedRoles.js",
+    "seed:request-v2": "node src/seeders/seedRequestV2Foundation.js"
   },
   "keywords": [],
   "author": "",
