@@ -26,6 +26,8 @@ const cabinetBayRoutes = require("./routes/cabinetBay.routes");
 const storageBoxRoutes = require("./routes/storageBox.routes");
 const boxRecordRoutes = require("./routes/boxRecord.routes");
 
+const requestV2FoundationRoutes = require("./routes/requestV2Foundation.routes");
+
 const app = express();
 
 const ADMIN_ONLY = ["Admin"];
@@ -181,6 +183,20 @@ app.use(
   protect,
   allowRoles(...CRO_OPERATIONS),
   boxRecordRoutes,
+);
+
+app.use(
+  "/api/request-v2",
+  protect,
+  allowRoles(
+    "Admin",
+    "Records Head",
+    "Records Officer",
+    "Department Head",
+    "Department Custodian",
+    "Viewer"
+  ),
+  requestV2FoundationRoutes
 );
 
 app.use(errorHandler);
