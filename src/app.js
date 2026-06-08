@@ -28,6 +28,21 @@ const boxRecordRoutes = require("./routes/boxRecord.routes");
 
 const app = express();
 
+const ADMIN_ONLY = ["Admin"];
+
+const CRO_MANAGEMENT = ["Admin", "Records Head"];
+
+const CRO_OPERATIONS = ["Admin", "Records Head", "Records Officer"];
+
+const REQUEST_USERS = [
+  "Admin",
+  "Records Head",
+  "Records Officer",
+  "Department Head",
+  "Department Custodian",
+  "Viewer",
+];
+
 app.use(cors());
 app.use(express.json());
 app.use(
@@ -49,113 +64,122 @@ app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 
 app.use("/api/auth", authRoutes);
 
-// Public muna habang dev, or protect later
-app.use("/api/users", protect, allowRoles("Admin"), userRoutes);
-app.use("/api/roles", protect, allowRoles("Admin"), roleRoutes);
+app.use(
+  "/api/users",
+  protect,
+  allowRoles(...ADMIN_ONLY),
+  userRoutes,
+);
+
+app.use(
+  "/api/roles",
+  protect,
+  allowRoles(...ADMIN_ONLY),
+  roleRoutes,
+);
 
 app.use(
   "/api/dashboard",
   protect,
-  allowRoles("Admin", "Records Officer", "Viewer"),
+  allowRoles(...REQUEST_USERS),
   dashboardRoutes,
+);
+
+app.use(
+  "/api/requests",
+  protect,
+  allowRoles(...REQUEST_USERS),
+  requestRoutes,
 );
 
 app.use(
   "/api/data-lists",
   protect,
-  allowRoles("Admin", "Records Officer", "Viewer"),
+  allowRoles(...CRO_OPERATIONS),
   dataListRoutes,
 );
 
 app.use(
   "/api/file-paths",
   protect,
-  allowRoles("Admin", "Records Officer", "Viewer"),
+  allowRoles(...CRO_OPERATIONS),
   filePathRoutes,
-);
-
-// Requests
-app.use(
-  "/api/requests",
-  protect,
-  allowRoles("Admin", "Records Officer", "Viewer"),
-  requestRoutes,
 );
 
 app.use(
   "/api/archive-records",
   protect,
-  allowRoles("Admin", "Records Officer"),
+  allowRoles(...CRO_OPERATIONS),
   archiveRecordRoutes,
 );
 
-// Records master data
 app.use(
   "/api/departments",
   protect,
-  allowRoles("Admin", "Records Officer"),
+  allowRoles(...ADMIN_ONLY),
   departmentRoutes,
 );
 
 app.use(
   "/api/series",
   protect,
-  allowRoles("Admin", "Records Officer"),
+  allowRoles(...CRO_OPERATIONS),
   seriesRoutes,
 );
 
 app.use(
   "/api/specifics",
   protect,
-  allowRoles("Admin", "Records Officer"),
+  allowRoles(...CRO_OPERATIONS),
   specificRoutes,
 );
 
-// Agency records
 app.use(
   "/api/agency-forms",
   protect,
-  allowRoles("Admin", "Records Officer"),
+  allowRoles(...CRO_OPERATIONS),
   agencyFormRoutes,
 );
 
-// Audit logs
 app.use(
   "/api/audit-logs",
   protect,
-  allowRoles("Admin", "Record Officer"),
+  allowRoles(...CRO_MANAGEMENT),
   auditLogRoutes,
 );
 
 app.use(
   "/api/import-logs",
   protect,
-  allowRoles("Admin", "Records Officer"),
+  allowRoles(...CRO_OPERATIONS),
   importLogRoutes,
 );
 
 app.use(
   "/api/cabinets",
   protect,
-  allowRoles("Admin", "Records Officer"),
+  allowRoles(...CRO_OPERATIONS),
   cabinetRoutes,
 );
+
 app.use(
   "/api/cabinet-bays",
   protect,
-  allowRoles("Admin", "Records Officer"),
+  allowRoles(...CRO_OPERATIONS),
   cabinetBayRoutes,
 );
+
 app.use(
   "/api/storage-boxes",
   protect,
-  allowRoles("Admin", "Records Officer"),
+  allowRoles(...CRO_OPERATIONS),
   storageBoxRoutes,
 );
+
 app.use(
   "/api/box-records",
   protect,
-  allowRoles("Admin", "Records Officer"),
+  allowRoles(...CRO_OPERATIONS),
   boxRecordRoutes,
 );
 
