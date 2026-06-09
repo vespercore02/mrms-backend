@@ -40,37 +40,52 @@ const validateStatusTransition = (currentStatus, nextStatus) => {
 };
 
 const validateRequiredFormsBeforeSubmit = async (request) => {
-  const requestType = await RequestType.findByPk(request.RequestTypeID);
-
-  if (!requestType) return;
-
-  if (requestType.RequestTypeCode !== "TRANSFER_NON_CURRENT_RECORDS") {
-    return;
-  }
-
-  const annexAFormType = await RequestFormType.findOne({
-    where: {
-      FormCode: "ANNEX_A",
-      Status: "ACTIVE",
-    },
-  });
-
-  if (!annexAFormType) {
-    const error = new Error("ANNEX_A form type is not configured.");
+  if (!request.RequestTypeID) {
+    const error = new Error("Request type is required before submitting.");
     error.statusCode = 400;
     throw error;
   }
 
-  const annexAForm = await RequestForm.findOne({
+  const requiredForms = await RequestRequiredForm.findAll({
     where: {
-      RequestID: request.RequestID,
-      RequestFormTypeID: annexAFormType.RequestFormTypeID,
+      RequestTypeID: request.RequestTypeID,
+      RequirementType: "REQUIRED",
+      Status: "ACTIVE",
     },
+    include: [RequestFormType],
+    order: [["SortOrder", "ASC"]],
   });
 
-  if (!annexAForm) {
+  if (requiredForms.length === 0) {
+    return;
+  }
+
+  const missingOrIncompleteForms = [];
+
+  for (const requiredForm of requiredForms) {
+    const requestForm = await RequestForm.findOne({
+      where: {
+        RequestID: request.RequestID,
+        RequestFormTypeID: requiredForm.RequestFormTypeID,
+      },
+    });
+
+    const isCompleted =
+      requestForm &&
+      ["SUBMITTED", "REVIEWED", "APPROVED"].includes(requestForm.Status);
+
+    if (!isCompleted) {
+      missingOrIncompleteForms.push(
+        requiredForm.RequestFormType?.FormCode || "Unknown Form",
+      );
+    }
+  }
+
+  if (missingOrIncompleteForms.length > 0) {
     const error = new Error(
-      "Annex A is required before submitting this transfer request.",
+      `Complete required forms before submitting: ${missingOrIncompleteForms.join(
+        ", ",
+      )}`,
     );
     error.statusCode = 400;
     throw error;
