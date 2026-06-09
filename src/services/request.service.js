@@ -8,6 +8,9 @@ const {
   RequestStatusHistory,
   User,
   AgencyForm,
+  RequestType,
+  RequestForm,
+  RequestFormType,
 } = require("../models");
 
 const allowedStatusTransitions = {
@@ -35,12 +38,52 @@ const validateStatusTransition = (currentStatus, nextStatus) => {
   }
 };
 
+const validateRequiredFormsBeforeSubmit = async (request) => {
+  const requestType = await RequestType.findByPk(request.RequestTypeID);
+
+  if (!requestType) return;
+
+  if (requestType.RequestTypeCode !== "TRANSFER_NON_CURRENT_RECORDS") {
+    return;
+  }
+
+  const annexAFormType = await RequestFormType.findOne({
+    where: {
+      FormCode: "ANNEX_A",
+      Status: "ACTIVE",
+    },
+  });
+
+  if (!annexAFormType) {
+    const error = new Error("ANNEX_A form type is not configured.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const annexAForm = await RequestForm.findOne({
+    where: {
+      RequestID: request.RequestID,
+      RequestFormTypeID: annexAFormType.RequestFormTypeID,
+    },
+  });
+
+  if (!annexAForm) {
+    const error = new Error(
+      "Annex A is required before submitting this transfer request.",
+    );
+    error.statusCode = 400;
+    throw error;
+  }
+};
+
 const submitDraftRequest = async (id, userId) => {
   const request = await Request.findByPk(id);
 
   if (!request) return null;
 
   validateStatusTransition(request.Status, "SUBMITTED");
+
+  await validateRequiredFormsBeforeSubmit(request);
 
   await request.update({
     Status: "SUBMITTED",
@@ -56,9 +99,6 @@ const submitDraftRequest = async (id, userId) => {
 
   return request;
 };
-
-
-
 const generateRequestCode = () => {
   const date = new Date();
   const y = date.getFullYear();
@@ -100,7 +140,10 @@ const getAllRequests = async (query) => {
         as: "requester",
         attributes: { exclude: ["Password"] },
       },
-      RequestType,
+      {
+        model: RequestType,
+        as: "RequestTypeInfo",
+      },
       AgencyForm,
       RequestStatusHistory,
     ],
@@ -121,7 +164,10 @@ const getRequestById = async (id) => {
         as: "requester",
         attributes: { exclude: ["Password"] },
       },
-      RequestType,
+      {
+        model: RequestType,
+        as: "RequestTypeInfo",
+      },
       AgencyForm,
       RequestStatusHistory,
     ],

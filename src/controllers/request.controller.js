@@ -109,7 +109,7 @@ const submitDraftRequest = async (req, res) => {
   } catch (error) {
     return res.status(error.statusCode || 500).json({
       success: false,
-      message: error.message || "Failed to submit draft request",
+      message: error.message || "Failed to submit request",
     });
   }
 };
