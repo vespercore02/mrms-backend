@@ -9,6 +9,7 @@ const {
   User,
   AgencyForm,
   RequestType,
+  RequestRequiredForm,
   RequestForm,
   RequestFormType,
 } = require("../models");
@@ -174,6 +175,40 @@ const getRequestById = async (id) => {
   });
 };
 
+const createRequiredFormsForRequest = async (request) => {
+  if (!request.RequestTypeID) return;
+
+  const requiredForms = await RequestRequiredForm.findAll({
+    where: {
+      RequestTypeID: request.RequestTypeID,
+      Status: "ACTIVE",
+    },
+    include: [RequestFormType],
+    order: [["SortOrder", "ASC"]],
+  });
+
+  for (const requiredForm of requiredForms) {
+    if (requiredForm.RequirementType !== "REQUIRED") {
+      continue;
+    }
+
+    await RequestForm.findOrCreate({
+      where: {
+        RequestID: request.RequestID,
+        RequestFormTypeID: requiredForm.RequestFormTypeID,
+      },
+      defaults: {
+        RequestID: request.RequestID,
+        RequestFormTypeID: requiredForm.RequestFormTypeID,
+        FormData: null,
+        Status: "DRAFT",
+        PreparedBy: request.RequestedBy || null,
+        Remarks: `Auto-created ${requiredForm.RequestFormType?.FormCode || "request form"}`,
+      },
+    });
+  }
+};
+
 const createRequest = async (payload) => {
   const requestCode = generateRequestCode();
 
@@ -186,6 +221,8 @@ const createRequest = async (payload) => {
     Status: payload.Status || "DRAFT",
     Remarks: payload.Remarks,
   });
+
+  await createRequiredFormsForRequest(request);
 
   await RequestStatusHistory.create({
     RequestID: request.RequestID,
