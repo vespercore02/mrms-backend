@@ -3,6 +3,7 @@ const {
   Request,
   RequestFormType,
   User,
+  RequestRequiredForm,
 } = require("../models");
 
 const getAllRequestForms = async (query = {}) => {
@@ -20,7 +21,7 @@ const getAllRequestForms = async (query = {}) => {
     where.Status = query.status;
   }
 
-  return await RequestForm.findAll({
+  const requestForms = await RequestForm.findAll({
     where,
     include: [
       Request,
@@ -42,6 +43,42 @@ const getAllRequestForms = async (query = {}) => {
       },
     ],
     order: [["createdAt", "DESC"]],
+  });
+
+  const plainForms = requestForms.map((form) => form.toJSON());
+
+  const requestTypeIds = [
+    ...new Set(
+      plainForms
+        .map((form) => form.Request?.RequestTypeID)
+        .filter(Boolean)
+    ),
+  ];
+
+  const requiredForms = await RequestRequiredForm.findAll({
+    where: {
+      RequestTypeID: requestTypeIds,
+      Status: "ACTIVE",
+    },
+  });
+
+  const requiredFormMap = {};
+
+  requiredForms.forEach((item) => {
+    const key = `${item.RequestTypeID}-${item.RequestFormTypeID}`;
+    requiredFormMap[key] = item.toJSON();
+  });
+
+  return plainForms.map((form) => {
+    const key = `${form.Request?.RequestTypeID}-${form.RequestFormTypeID}`;
+    const requiredForm = requiredFormMap[key];
+
+    return {
+      ...form,
+      RequirementType: requiredForm?.RequirementType || "OPTIONAL",
+      TriggerCondition: requiredForm?.TriggerCondition || null,
+      SortOrder: requiredForm?.SortOrder || null,
+    };
   });
 };
 

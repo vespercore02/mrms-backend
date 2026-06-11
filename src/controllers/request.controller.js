@@ -2,7 +2,7 @@ const requestService = require("../services/request.service");
 const asyncHandler = require("../utils/asyncHandler");
 
 const getAllRequests = asyncHandler(async (req, res) => {
-  const requests = await requestService.getAllRequests(req.query);
+  const requests = await requestService.getAllRequests(req.query, req.user);
 
   return res.status(200).json({
     success: true,
@@ -11,7 +11,10 @@ const getAllRequests = asyncHandler(async (req, res) => {
 });
 
 const getRequestById = asyncHandler(async (req, res) => {
-  const request = await requestService.getRequestById(req.params.id);
+  const request = await requestService.getRequestById(
+  req.params.id,
+  req.user
+);
 
   if (!request) {
     const error = new Error("Request not found");

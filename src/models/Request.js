@@ -22,6 +22,10 @@ const Request = sequelize.define(
       type: DataTypes.INTEGER,
       allowNull: true,
     },
+    DepartmentID: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+    },
     AgencyUniqueID: {
       type: DataTypes.STRING(100),
     },

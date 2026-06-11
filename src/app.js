@@ -91,8 +91,15 @@ app.use(
 app.use(
   "/api/requests",
   protect,
-  allowRoles(...REQUEST_USERS),
-  requestRoutes,
+  allowRoles(
+    "Admin",
+    "Records Head",
+    "Records Officer",
+    "Department Head",
+    "Department Custodian",
+    "Viewer"
+  ),
+  requestRoutes
 );
 
 app.use(
@@ -119,7 +126,7 @@ app.use(
 app.use(
   "/api/departments",
   protect,
-  allowRoles(...ADMIN_ONLY),
+  allowRoles(...REQUEST_USERS),
   departmentRoutes,
 );
 
@@ -140,7 +147,7 @@ app.use(
 app.use(
   "/api/agency-forms",
   protect,
-  allowRoles(...CRO_OPERATIONS),
+  allowRoles(...REQUEST_USERS),
   agencyFormRoutes,
 );
 

@@ -8,6 +8,7 @@ const {
   RequestStatusHistory,
   User,
   AgencyForm,
+  Department,
   RequestType,
   RequestRequiredForm,
   RequestForm,
@@ -125,10 +126,20 @@ const generateRequestCode = () => {
   return `REQ-${y}${m}${d}-${random}`;
 };
 
-const getAllRequests = async (query) => {
+const getAllRequests = async (query, user) => {
   const { page, limit, offset } = getPagination(query);
 
   const where = {};
+
+  const roleName = user?.Role?.RoleName;
+
+  const isDepartmentUser = ["Department Head", "Department Custodian"].includes(
+    roleName,
+  );
+
+  if (isDepartmentUser) {
+    where.DepartmentID = user.DepartmentID;
+  }
 
   if (query.status) {
     where.Status = query.status;
@@ -160,6 +171,7 @@ const getAllRequests = async (query) => {
         model: RequestType,
         as: "RequestTypeInfo",
       },
+      Department,
       AgencyForm,
       RequestStatusHistory,
     ],
@@ -172,8 +184,8 @@ const getAllRequests = async (query) => {
   return getPagingData(result, page, limit);
 };
 
-const getRequestById = async (id) => {
-  return await Request.findByPk(id, {
+const getRequestById = async (id, user) => {
+  const request = await Request.findByPk(id, {
     include: [
       {
         model: User,
@@ -184,10 +196,34 @@ const getRequestById = async (id) => {
         model: RequestType,
         as: "RequestTypeInfo",
       },
+      Department,
       AgencyForm,
       RequestStatusHistory,
     ],
   });
+
+  if (!request) {
+    return null;
+  }
+
+  const roleName = user?.Role?.RoleName;
+
+  const isDepartmentUser = ["Department Head", "Department Custodian"].includes(
+    roleName,
+  );
+
+  if (
+    isDepartmentUser &&
+    Number(request.DepartmentID) !== Number(user.DepartmentID)
+  ) {
+    const error = new Error("You are not allowed to view this request.");
+
+    error.statusCode = 403;
+
+    throw error;
+  }
+
+  return request;
 };
 
 const createRequiredFormsForRequest = async (request) => {
@@ -227,10 +263,26 @@ const createRequiredFormsForRequest = async (request) => {
 const createRequest = async (payload) => {
   const requestCode = generateRequestCode();
 
+  const requester = await User.findByPk(payload.RequestedBy);
+
+  if (!requester) {
+    const error = new Error("Requester not found");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  const departmentId = payload.DepartmentID || requester.DepartmentID || null;
+
+  if (!departmentId) {
+    const error = new Error("Department is required for this request.");
+    error.statusCode = 400;
+    throw error;
+  }
+
   const request = await Request.create({
     RequestCode: requestCode,
     RequestType: payload.RequestType,
-    AgencyUniqueID: payload.AgencyUniqueID,
+    DepartmentID: departmentId,
     RequestedBy: payload.RequestedBy,
     RequestTypeID: payload.RequestTypeID || null,
     Status: payload.Status || "DRAFT",

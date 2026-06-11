@@ -258,3 +258,14 @@ RequestForm.belongsTo(User, {
   foreignKey: "ApprovedBy",
   as: "ApprovedUser",
 });
+
+
+Department.hasMany(Request, {
+  foreignKey: "DepartmentID",
+  onDelete: "SET NULL",
+  onUpdate: "CASCADE",
+});
+
+Request.belongsTo(Department, {
+  foreignKey: "DepartmentID",
+});
