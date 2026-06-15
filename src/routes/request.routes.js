@@ -1,30 +1,30 @@
-const express = require('express');
-const requestController = require('../controllers/request.controller');
-const validateRequest = require('../middlewares/validateRequest');
-const validateStatus = require('../middlewares/validateStatus');
+const express = require("express");
+const requestController = require("../controllers/request.controller");
+const validateRequest = require("../middlewares/validateRequest");
+const validateStatus = require("../middlewares/validateStatus");
 
 const router = express.Router();
 
-router.get('/', requestController.getAllRequests);
-router.get('/:id', requestController.getRequestById);
+router.get("/", requestController.getAllRequests);
+router.get("/:id", requestController.getRequestById);
 
 router.post(
-  '/',
-  validateRequest(['RequestType', 'AgencyUniqueID', 'RequestedBy']),
-  requestController.createRequest
+  "/",
+  validateRequest(["RequestType", "DepartmentID", "RequestedBy"]),
+  requestController.createRequest,
 );
 
-router.put('/:id', requestController.updateRequest);
+router.put("/:id", requestController.updateRequest);
 
 router.patch("/:id/submit", requestController.submitDraftRequest);
 
 router.patch(
-  '/:id/status',
-  validateRequest(['Status', 'ChangedBy']),
+  "/:id/status",
+  validateRequest(["Status", "ChangedBy"]),
   validateStatus,
-  requestController.updateRequestStatus
+  requestController.updateRequestStatus,
 );
 
-router.delete('/:id', requestController.deleteRequest);
+router.delete("/:id", requestController.deleteRequest);
 
 module.exports = router;

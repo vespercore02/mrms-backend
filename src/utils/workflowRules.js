@@ -1,39 +1,46 @@
-const workflowRules = {
-  SUBMITTED: ["RECEIVED"],
+const allowedTransitions = {
+  DRAFT: ["SUBMITTED"],
 
-  RECEIVED: ["UNDER_REVIEW"],
+  SUBMITTED: ["DEPARTMENT_APPROVED", "FOR_COMPLIANCE", "REJECTED"],
 
-  UNDER_REVIEW: [
-    "FOR_COMPLIANCE",
-    "NOTICE_OF_INSPECTION",
-    "APPROVED",
-    "REJECTED",
-  ],
+  DEPARTMENT_APPROVED: ["RECEIVED", "REJECTED"],
+
+  RECEIVED: ["UNDER_REVIEW", "REJECTED"],
+
+  UNDER_REVIEW: ["FOR_CRH_APPROVAL", "FOR_COMPLIANCE", "REJECTED"],
 
   FOR_COMPLIANCE: ["RESUBMITTED", "REJECTED"],
 
-  REJECTED: ["RESUBMITTED"],
+  RESUBMITTED: [
+    "DEPARTMENT_APPROVED",
+    "UNDER_REVIEW",
+    "FOR_CRH_APPROVAL",
+    "FOR_COMPLIANCE",
+    "REJECTED",
+  ],
 
-  RESUBMITTED: ["UNDER_REVIEW"],
+  FOR_CRH_APPROVAL: ["APPROVED", "FOR_COMPLIANCE", "REJECTED"],
 
-  NOTICE_OF_INSPECTION: ["INSPECTION_DONE"],
+  APPROVED: ["FOR_TRANSMITTAL"],
 
-  INSPECTION_DONE: ["APPROVED", "REJECTED"],
+  FOR_TRANSMITTAL: ["RECEIVED_FOR_STORAGE"],
 
-  APPROVED: ["COMPLETED"],
+  RECEIVED_FOR_STORAGE: ["STORAGE_ASSIGNED"],
+
+  STORAGE_ASSIGNED: ["COMPLETED"],
 
   COMPLETED: ["ARCHIVED"],
+
+  REJECTED: ["RESUBMITTED"],
 
   ARCHIVED: [],
 };
 
-const canTransitionStatus = (oldStatus, newStatus) => {
-  if (!workflowRules[oldStatus]) return false;
-
-  return workflowRules[oldStatus].includes(newStatus);
+const canTransitionStatus = (currentStatus, nextStatus) => {
+  const allowedNextStatuses = allowedTransitions[currentStatus] || [];
+  return allowedNextStatuses.includes(nextStatus);
 };
 
 module.exports = {
-  workflowRules,
   canTransitionStatus,
 };
