@@ -60,6 +60,16 @@ Request.belongsTo(AgencyForm, { foreignKey: "AgencyUniqueID" });
 Request.hasMany(RequestStatusHistory, { foreignKey: "RequestID" });
 RequestStatusHistory.belongsTo(Request, { foreignKey: "RequestID" });
 
+User.hasMany(RequestStatusHistory, {
+  foreignKey: "ChangedBy",
+  onDelete: "SET NULL",
+  onUpdate: "CASCADE",
+});
+
+RequestStatusHistory.belongsTo(User, {
+  foreignKey: "ChangedBy",
+});
+
 User.hasMany(RequestStatusHistory, { foreignKey: "ChangedBy" });
 RequestStatusHistory.belongsTo(User, {
   foreignKey: "ChangedBy",

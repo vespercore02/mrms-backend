@@ -223,7 +223,17 @@ const getRequestById = async (id, user) => {
       },
       Department,
       AgencyForm,
-      RequestStatusHistory,
+      {
+        model: RequestStatusHistory,
+        include: [
+          {
+            model: User,
+            attributes: {
+              exclude: ["Password"],
+            },
+          },
+        ],
+      },
     ],
   });
 

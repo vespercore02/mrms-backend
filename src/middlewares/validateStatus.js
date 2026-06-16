@@ -6,13 +6,14 @@ const allowedStatuses = [
   "UNDER_REVIEW",
   "FOR_COMPLIANCE",
   "RESUBMITTED",
+  "FOR_CRH_APPROVAL",
   "APPROVED",
   "FOR_TRANSMITTAL",
   "RECEIVED_FOR_STORAGE",
   "STORAGE_ASSIGNED",
+  "REJECTED",
   "COMPLETED",
   "ARCHIVED",
-  "REJECTED",
 ];
 
 const validateStatus = (req, res, next) => {
