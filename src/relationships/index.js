@@ -25,7 +25,6 @@ const RequestFormType = require("../models/RequestFormType");
 const RequestRequiredForm = require("../models/RequestRequiredForm");
 const RequestForm = require("../models/RequestForm");
 
-
 Department.hasMany(User, {
   foreignKey: "DepartmentID",
   onDelete: "SET NULL",
@@ -135,6 +134,36 @@ CabinetBay.hasMany(StorageBox, {
   foreignKey: "CabinetBayID",
   onDelete: "CASCADE",
   onUpdate: "CASCADE",
+});
+
+Cabinet.hasMany(Request, {
+  foreignKey: "CabinetID",
+  onDelete: "SET NULL",
+  onUpdate: "CASCADE",
+});
+
+Request.belongsTo(Cabinet, {
+  foreignKey: "CabinetID",
+});
+
+CabinetBay.hasMany(Request, {
+  foreignKey: "CabinetBayID",
+  onDelete: "SET NULL",
+  onUpdate: "CASCADE",
+});
+
+Request.belongsTo(CabinetBay, {
+  foreignKey: "CabinetBayID",
+});
+
+StorageBox.hasMany(Request, {
+  foreignKey: "StorageBoxID",
+  onDelete: "SET NULL",
+  onUpdate: "CASCADE",
+});
+
+Request.belongsTo(StorageBox, {
+  foreignKey: "StorageBoxID",
 });
 
 StorageBox.belongsTo(CabinetBay, {
@@ -268,7 +297,6 @@ RequestForm.belongsTo(User, {
   foreignKey: "ApprovedBy",
   as: "ApprovedUser",
 });
-
 
 Department.hasMany(Request, {
   foreignKey: "DepartmentID",

@@ -14,6 +14,8 @@ router.post(
   requestController.createRequest,
 );
 
+router.patch("/:id/storage-location", requestController.assignStorageLocation);
+
 router.put("/:id", requestController.updateRequest);
 
 router.patch("/:id/submit", requestController.submitDraftRequest);

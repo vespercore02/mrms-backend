@@ -62,7 +62,7 @@ const updateStorageBox = async (req, res) => {
   try {
     const box = await storageBoxService.updateStorageBox(
       req.params.id,
-      req.body
+      req.body,
     );
 
     if (!box) {
@@ -109,10 +109,51 @@ const deleteStorageBox = async (req, res) => {
   }
 };
 
+const getAvailableStorageBoxes = async (req, res) => {
+  try {
+    const boxes = await storageBoxService.getAvailableStorageBoxes(req.query);
+
+    return res.status(200).json({
+      success: true,
+      data: boxes,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch available storage boxes",
+      error: error.message,
+    });
+  }
+};
+
+const generateBoxSlotsForBay = async (req, res) => {
+  try {
+    const boxes = await storageBoxService.generateBoxSlotsForBay(
+      req.params.cabinetBayId,
+    );
+    const where = {
+      Status: "AVAILABLE",
+    };
+
+    return res.status(200).json({
+      success: true,
+      message: "Box slots generated successfully",
+      data: boxes,
+    });
+  } catch (error) {
+    return res.status(error.statusCode || 500).json({
+      success: false,
+      message: error.message || "Failed to generate box slots",
+    });
+  }
+};
+
 module.exports = {
   getAllStorageBoxes,
   getStorageBoxById,
   createStorageBox,
   updateStorageBox,
   deleteStorageBox,
+  getAvailableStorageBoxes,
+  generateBoxSlotsForBay,
 };

@@ -54,6 +54,21 @@ const Request = sequelize.define(
       allowNull: false,
       defaultValue: "DRAFT",
     },
+
+    CabinetID: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+    },
+
+    CabinetBayID: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+    },
+
+    StorageBoxID: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+    },
     Remarks: {
       type: DataTypes.TEXT,
     },

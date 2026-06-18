@@ -3,6 +3,7 @@ const storageBoxController = require("../controllers/storageBox.controller");
 
 const router = express.Router();
 
+router.get("/available", storageBoxController.getAvailableStorageBoxes);
 router.get("/", storageBoxController.getAllStorageBoxes);
 router.get("/:id", storageBoxController.getStorageBoxById);
 router.post("/", storageBoxController.createStorageBox);

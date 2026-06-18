@@ -38,7 +38,7 @@ const StorageBox = sequelize.define(
     },
 
     Status: {
-      type: DataTypes.ENUM("ACTIVE", "FULL", "TRANSFERRED", "DISPOSED"),
+      type: DataTypes.ENUM("AVAILABLE", "OCCUPIED", "INACTIVE"),
       allowNull: false,
       defaultValue: "ACTIVE",
     },
@@ -51,7 +51,7 @@ const StorageBox = sequelize.define(
   {
     tableName: "tblStorageBoxes",
     timestamps: true,
-  }
+  },
 );
 
 module.exports = StorageBox;

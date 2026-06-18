@@ -17,7 +17,7 @@ const BoxRecord = sequelize.define(
 
     DataListID: {
       type: DataTypes.INTEGER,
-      allowNull: false,
+      allowNull: true,
     },
 
     RequestID: {

@@ -2,6 +2,7 @@ const createAuditLog = require("../utils/auditLogger");
 const { canTransitionStatus } = require("../utils/workflowRules");
 const { Op } = require("sequelize");
 const { getPagination, getPagingData } = require("../utils/pagination");
+const storageBoxService = require("./storageBox.service");
 
 const {
   Request,
@@ -13,6 +14,10 @@ const {
   RequestRequiredForm,
   RequestForm,
   RequestFormType,
+  Cabinet,
+  CabinetBay,
+  StorageBox,
+  BoxRecord,
 } = require("../models");
 
 const allowedStatusTransitions = {
@@ -199,6 +204,9 @@ const getAllRequests = async (query, user) => {
       Department,
       AgencyForm,
       RequestStatusHistory,
+      Cabinet,
+      CabinetBay,
+      StorageBox,
     ],
     order: [["createdAt", "DESC"]],
     limit,
@@ -234,6 +242,9 @@ const getRequestById = async (id, user) => {
           },
         ],
       },
+      Cabinet,
+      CabinetBay,
+      StorageBox,
     ],
   });
 
@@ -412,6 +423,127 @@ const deleteRequest = async (id) => {
   return request;
 };
 
+const assignStorageLocation = async (id, payload) => {
+  const request = await Request.findByPk(id);
+
+  if (!request) return null;
+
+  if (request.Status !== "RECEIVED_FOR_STORAGE") {
+    const error = new Error(
+      "Storage can only be assigned when request is RECEIVED_FOR_STORAGE.",
+    );
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const occupiedRequest = await Request.findOne({
+    where: {
+      StorageBoxID: payload.StorageBoxID,
+      RequestID: {
+        [Op.ne]: id,
+      },
+      Status: {
+        [Op.notIn]: ["REJECTED", "ARCHIVED"],
+      },
+    },
+  });
+
+  if (occupiedRequest) {
+    const error = new Error(
+      `Storage box is already assigned to request ${occupiedRequest.RequestCode}.`,
+    );
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const storageBox = await StorageBox.findByPk(payload.StorageBoxID, {
+    include: [CabinetBay],
+  });
+
+  if (!storageBox) {
+    const error = new Error(
+      "Storage box not found. Please select a valid box.",
+    );
+    error.statusCode = 404;
+    throw error;
+  }
+
+  if (Number(storageBox.CabinetBayID) !== Number(payload.CabinetBayID)) {
+    const error = new Error(
+      "Selected storage box does not belong to this cabinet bay.",
+    );
+    error.statusCode = 400;
+    throw error;
+  }
+
+  if (storageBox.Status !== "AVAILABLE") {
+    const error = new Error(
+      `Storage box ${storageBox.BoxCode} is not available.`,
+    );
+    error.statusCode = 400;
+    throw error;
+  }
+
+  await storageBox.update({
+    Status: "OCCUPIED",
+  });
+
+  await request.update({
+    CabinetID: payload.CabinetID || null,
+    CabinetBayID: payload.CabinetBayID || null,
+    StorageBoxID: payload.StorageBoxID || null,
+  });
+
+  await createAuditLog({
+    action: "ASSIGN_STORAGE",
+    tableName: "tblRequests",
+    recordId: request.RequestID,
+    oldValue: null,
+    newValue: {
+      CabinetID: payload.CabinetID,
+      CabinetBayID: payload.CabinetBayID,
+      StorageBoxID: payload.StorageBoxID,
+    },
+    performedBy: payload.AssignedBy,
+  });
+
+  console.log("Creating BoxRecord for request:", request.RequestID);
+
+  const [boxRecord, created] = await BoxRecord.findOrCreate({
+    where: {
+      RequestID: request.RequestID,
+      StorageBoxID: payload.StorageBoxID,
+    },
+    defaults: {
+      RequestID: request.RequestID,
+      StorageBoxID: payload.StorageBoxID,
+      DataListID: null,
+      Remarks: `Auto-created from request ${request.RequestCode}`,
+    },
+  });
+
+  await storageBoxService.recomputeBayCapacity(payload.CabinetBayID);
+
+  await request.update({
+    Status: "STORAGE_ASSIGNED",
+  });
+
+  await RequestStatusHistory.create({
+    RequestID: request.RequestID,
+    OldStatus: "RECEIVED_FOR_STORAGE",
+    NewStatus: "STORAGE_ASSIGNED",
+    ChangedBy: payload.AssignedBy || null,
+    Remarks: "Storage location assigned",
+  });
+
+  console.log("BoxRecord result:", {
+    created,
+    boxRecordId: boxRecord.BoxRecordID,
+  });
+
+  return request;
+};
+
 module.exports = {
   getAllRequests,
   getRequestById,
@@ -420,4 +552,6 @@ module.exports = {
   updateRequestStatus,
   deleteRequest,
   submitDraftRequest,
+  assignStorageLocation,
+  BoxRecord,
 };

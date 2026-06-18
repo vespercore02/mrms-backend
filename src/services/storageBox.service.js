@@ -1,4 +1,13 @@
-const { StorageBox, CabinetBay, Cabinet, Department } = require("../models");
+const { Op } = require("sequelize");
+const {
+  StorageBox,
+  CabinetBay,
+  Cabinet,
+  Department,
+  Request,
+  BoxRecord,
+  DataList,
+} = require("../models");
 
 const formatNumber = (number, length = 2) => {
   return String(number).padStart(length, "0");
@@ -32,11 +41,16 @@ const recomputeBayCapacity = async (cabinetBayId) => {
 
   const boxes = await StorageBox.findAll({
     where: { CabinetBayID: cabinetBayId },
+    include: [BoxRecord],
   });
 
-  const currentBoxes = boxes.length;
+  const occupiedBoxes = boxes.filter(
+    (box) => box.BoxRecords && box.BoxRecords.length > 0,
+  );
 
-  const currentWeight = boxes.reduce((total, box) => {
+  const currentBoxes = occupiedBoxes.length;
+
+  const currentWeight = occupiedBoxes.reduce((total, box) => {
     return total + Number(box.EstimatedWeightKg || 0);
   }, 0);
 
@@ -83,6 +97,8 @@ const getAllStorageBoxes = async (query = {}) => {
     where.Status = query.status;
   }
 
+  console.log(query.cabinetBayId);
+
   return await StorageBox.findAll({
     where,
     include: [
@@ -90,6 +106,18 @@ const getAllStorageBoxes = async (query = {}) => {
       {
         model: CabinetBay,
         include: [Cabinet],
+      },
+      {
+        model: BoxRecord,
+        include: [
+          {
+            model: Request,
+            attributes: ["RequestID", "RequestCode", "RequestType", "Status"],
+          },
+          {
+            model: DataList,
+          },
+        ],
       },
     ],
     order: [["createdAt", "DESC"]],
@@ -103,6 +131,17 @@ const getStorageBoxById = async (id) => {
       {
         model: CabinetBay,
         include: [Cabinet],
+      },
+      {
+        model: BoxRecord,
+        include: [
+          {
+            model: Request,
+          },
+          {
+            model: DataList,
+          },
+        ],
       },
     ],
   });
@@ -158,6 +197,18 @@ const createStorageBox = async (payload) => {
   if (!boxNumber) {
     const error = new Error(
       `No available box slot in this bay. Max boxes: ${maxBoxes}`,
+    );
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const existingBoxNumber = existingBoxes.find(
+    (box) => Number(box.BoxNumber) === Number(boxNumber),
+  );
+
+  if (existingBoxNumber) {
+    const error = new Error(
+      `Box number ${boxNumber} already exists in this bay`,
     );
     error.statusCode = 400;
     throw error;
@@ -242,13 +293,113 @@ const deleteStorageBox = async (id) => {
 
   if (!box) return null;
 
-  const cabinetBayId = box.CabinetBayID;
+  await box.update({
+    Status: "INACTIVE",
+    Remarks: box.Remarks
+      ? `${box.Remarks}\nDeactivated`
+      : "Deactivated",
+  });
 
-  await box.destroy();
+  await recomputeBayCapacity(box.CabinetBayID);
+
+  return box;
+};
+
+const getAvailableStorageBoxes = async (query = {}) => {
+  const where = {};
+
+  if (query.CabinetBayID) {
+    where.CabinetBayID = query.CabinetBayID;
+  }
+
+  // Boxes already assigned to active requests
+  const assignedRequests = await Request.findAll({
+    attributes: ["StorageBoxID"],
+    where: {
+      StorageBoxID: {
+        [Op.ne]: null,
+      },
+      Status: {
+        [Op.notIn]: ["REJECTED", "ARCHIVED"],
+      },
+    },
+  });
+
+  const requestOccupiedBoxIds = assignedRequests
+    .map((request) => request.StorageBoxID)
+    .filter(Boolean);
+
+  // Boxes already containing records in tblBoxRecords
+  const existingBoxRecords = await BoxRecord.findAll({
+    attributes: ["StorageBoxID"],
+    where: {
+      StorageBoxID: {
+        [Op.ne]: null,
+      },
+    },
+  });
+
+  const boxRecordOccupiedBoxIds = existingBoxRecords
+    .map((record) => record.StorageBoxID)
+    .filter(Boolean);
+
+  const occupiedBoxIds = [
+    ...new Set([...requestOccupiedBoxIds, ...boxRecordOccupiedBoxIds]),
+  ];
+
+  if (occupiedBoxIds.length > 0) {
+    where.StorageBoxID = {
+      [Op.notIn]: occupiedBoxIds,
+    };
+  }
+
+  return await StorageBox.findAll({
+    where,
+    order: [
+      ["CabinetBayID", "ASC"],
+      ["BoxCode", "ASC"],
+    ],
+  });
+};
+
+const generateBoxSlotsForBay = async (cabinetBayId) => {
+  const bay = await CabinetBay.findByPk(cabinetBayId);
+
+  if (!bay) {
+    const error = new Error("Cabinet bay not found");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  const existingBoxes = await StorageBox.findAll({
+    where: { CabinetBayID: cabinetBayId },
+  });
+
+  const existingNumbers = existingBoxes.map((box) => Number(box.BoxNumber));
+
+  const createdBoxes = [];
+
+  for (let i = 1; i <= Number(bay.MaxBoxes); i++) {
+    if (existingNumbers.includes(i)) continue;
+
+    const boxCode = buildBoxCode(bay.BayCode, i);
+
+    const box = await StorageBox.create({
+      CabinetBayID: cabinetBayId,
+      BoxCode: boxCode,
+      BoxNumber: i,
+      DepartmentID: null,
+      EstimatedWeightKg: 0,
+      Status: "AVAILABLE",
+      Remarks: "Pre-created box slot",
+    });
+
+    createdBoxes.push(box);
+  }
 
   await recomputeBayCapacity(cabinetBayId);
 
-  return box;
+  return createdBoxes;
 };
 
 module.exports = {
@@ -258,4 +409,6 @@ module.exports = {
   updateStorageBox,
   deleteStorageBox,
   recomputeBayCapacity,
+  getAvailableStorageBoxes,
+  generateBoxSlotsForBay,
 };

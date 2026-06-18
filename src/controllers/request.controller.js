@@ -11,10 +11,7 @@ const getAllRequests = asyncHandler(async (req, res) => {
 });
 
 const getRequestById = asyncHandler(async (req, res) => {
-  const request = await requestService.getRequestById(
-  req.params.id,
-  req.user
-);
+  const request = await requestService.getRequestById(req.params.id, req.user);
 
   if (!request) {
     const error = new Error("Request not found");
@@ -117,6 +114,33 @@ const submitDraftRequest = async (req, res) => {
   }
 };
 
+const assignStorageLocation = async (req, res) => {
+  try {
+    const request = await requestService.assignStorageLocation(
+      req.params.id,
+      req.body,
+    );
+
+    if (!request) {
+      return res.status(404).json({
+        success: false,
+        message: "Request not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Storage location assigned successfully",
+      data: request,
+    });
+  } catch (error) {
+    return res.status(error.statusCode || 500).json({
+      success: false,
+      message: error.message || "Failed to assign storage location",
+    });
+  }
+};
+
 module.exports = {
   getAllRequests,
   getRequestById,
@@ -125,4 +149,5 @@ module.exports = {
   updateRequestStatus,
   deleteRequest,
   submitDraftRequest,
+  assignStorageLocation
 };
