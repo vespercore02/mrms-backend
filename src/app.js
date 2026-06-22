@@ -133,7 +133,7 @@ app.use(
 app.use(
   "/api/series",
   protect,
-  allowRoles(...CRO_OPERATIONS),
+  allowRoles(...REQUEST_USERS),
   seriesRoutes,
 );
 
