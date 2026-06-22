@@ -1,6 +1,8 @@
 const {
   RequestForm,
   Request,
+  Department,
+  AgencyForm,
   RequestFormType,
   User,
   RequestRequiredForm,
@@ -49,9 +51,7 @@ const getAllRequestForms = async (query = {}) => {
 
   const requestTypeIds = [
     ...new Set(
-      plainForms
-        .map((form) => form.Request?.RequestTypeID)
-        .filter(Boolean)
+      plainForms.map((form) => form.Request?.RequestTypeID).filter(Boolean),
     ),
   ];
 
@@ -85,8 +85,19 @@ const getAllRequestForms = async (query = {}) => {
 const getRequestFormById = async (id) => {
   return await RequestForm.findByPk(id, {
     include: [
-      Request,
       RequestFormType,
+      {
+        model: Request,
+        include: [
+          Department,
+          AgencyForm,
+          {
+            model: User,
+            as: "requester",
+            attributes: { exclude: ["Password"] },
+          },
+        ],
+      },
       {
         model: User,
         as: "PreparedUser",
