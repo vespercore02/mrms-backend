@@ -411,6 +411,21 @@ const updateRequestStatus = async (id, payload) => {
     performedBy: payload.ChangedBy,
   });
 
+  if (newStatus === "DEPARTMENT_APPROVED") {
+    await RequestForm.update(
+      {
+        Status: "APPROVED",
+        ApprovedBy: payload.ChangedBy,
+      },
+      {
+        where: {
+          RequestID: request.RequestID,
+          Status: "SUBMITTED",
+        },
+      },
+    );
+  }
+
   return request;
 };
 

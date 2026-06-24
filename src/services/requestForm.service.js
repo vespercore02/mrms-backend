@@ -3,8 +3,8 @@ const {
   Request,
   Department,
   AgencyForm,
-  RequestFormType,
   User,
+  RequestFormType,
   RequestRequiredForm,
 } = require("../models");
 
@@ -95,6 +95,22 @@ const getRequestFormById = async (id) => {
             model: User,
             as: "requester",
             attributes: { exclude: ["Password"] },
+          },
+          {
+            model: RequestForm,
+            include: [
+              RequestFormType,
+              {
+                model: User,
+                as: "ApprovedUser",
+                attributes: { exclude: ["Password"] },
+              },
+              {
+                model: User,
+                as: "PreparedUser",
+                attributes: { exclude: ["Password"] },
+              },
+            ],
           },
         ],
       },
