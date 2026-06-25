@@ -13,7 +13,59 @@ const {
   BoxRecord,
 } = require("../models");
 
-const getDashboardSummary = async () => {
+const { Op } = require("sequelize");
+
+const CRO_VISIBLE_STATUSES = [
+  "DEPARTMENT_APPROVED",
+  "RECEIVED",
+  "UNDER_REVIEW",
+  "FOR_CRH_APPROVAL",
+  "APPROVED",
+  "FOR_TRANSMITTAL",
+  "RECEIVED_FOR_STORAGE",
+  "STORAGE_ASSIGNED",
+  "COMPLETED",
+];
+
+const buildRequestVisibilityWhere = (user) => {
+  const where = {};
+
+  const roleName = user?.Role?.RoleName;
+  const userId = user?.UserID;
+  const departmentId = user?.DepartmentID;
+
+  if (roleName === "Admin") {
+    return where;
+  }
+
+  if (roleName === "Department Custodian") {
+    where.RequestedBy = userId;
+    return where;
+  }
+
+  if (roleName === "Department Head") {
+    where.DepartmentID = departmentId;
+    return where;
+  }
+
+  if (["Records Officer", "Records Head"].includes(roleName)) {
+    where.Status = {
+      [Op.in]: CRO_VISIBLE_STATUSES,
+    };
+    return where;
+  }
+
+  where.RequestedBy = userId;
+  return where;
+};
+
+const getDashboardSummary = async (user) => {
+  const requestWhere = buildRequestVisibilityWhere(user);
+
+  const statusWhere = (status) => ({
+    ...requestWhere,
+    Status: status,
+  });
   const [
     totalRequests,
     submittedRequests,
@@ -44,16 +96,16 @@ const getDashboardSummary = async () => {
     totalStorageBoxes,
     totalBoxRecords,
   ] = await Promise.all([
-    Request.count(),
-    Request.count({ where: { Status: "SUBMITTED" } }),
-    Request.count({ where: { Status: "RECEIVED" } }),
-    Request.count({ where: { Status: "UNDER_REVIEW" } }),
-    Request.count({ where: { Status: "FOR_COMPLIANCE" } }),
-    Request.count({ where: { Status: "RESUBMITTED" } }),
-    Request.count({ where: { Status: "APPROVED" } }),
-    Request.count({ where: { Status: "COMPLETED" } }),
-    Request.count({ where: { Status: "ARCHIVED" } }),
-    Request.count({ where: { Status: "REJECTED" } }),
+    Request.count({ where: requestWhere }),
+    Request.count({ where: statusWhere("SUBMITTED") }),
+    Request.count({ where: statusWhere("RECEIVED") }),
+    Request.count({ where: statusWhere("UNDER_REVIEW") }),
+    Request.count({ where: statusWhere("FOR_COMPLIANCE") }),
+    Request.count({ where: statusWhere("RESUBMITTED") }),
+    Request.count({ where: statusWhere("APPROVED") }),
+    Request.count({ where: statusWhere("COMPLETED") }),
+    Request.count({ where: statusWhere("ARCHIVED") }),
+    Request.count({ where: statusWhere("REJECTED") }),
     Department.count(),
     AgencyForm.count(),
     FilePath.count(),

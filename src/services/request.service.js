@@ -4,6 +4,34 @@ const { Op } = require("sequelize");
 const { getPagination, getPagingData } = require("../utils/pagination");
 const storageBoxService = require("./storageBox.service");
 
+const CRO_VISIBLE_STATUSES = [
+  "DEPARTMENT_APPROVED",
+  "RECEIVED",
+  "UNDER_REVIEW",
+  "FOR_CRH_APPROVAL",
+  "APPROVED",
+  "FOR_TRANSMITTAL",
+  "RECEIVED_FOR_STORAGE",
+  "STORAGE_ASSIGNED",
+  "COMPLETED",
+];
+
+const canUserAccessRequest = (request, user) => {
+  const roleName = user?.Role?.RoleName;
+
+  if (roleName === "Admin") return true;
+
+  if (["Department Custodian", "Department Head"].includes(roleName)) {
+    return Number(request.DepartmentID) === Number(user.DepartmentID);
+  }
+
+  if (["Records Officer", "Records Head"].includes(roleName)) {
+    return CRO_VISIBLE_STATUSES.includes(request.Status);
+  }
+
+  return Number(request.RequestedBy) === Number(user?.UserID);
+};
+
 const {
   Request,
   RequestStatusHistory,
@@ -103,7 +131,7 @@ const validateRequiredFormsBeforeSubmit = async (request) => {
 
     const isCompleted =
       requestForm &&
-      ["SUBMITTED", "REVIEWED", "APPROVED"].includes(requestForm.Status);
+      ["GENERATED", "SUBMITTED", "REVIEWED", "APPROVED"].includes(requestForm.Status);
 
     if (!isCompleted) {
       missingOrIncompleteForms.push(
@@ -162,17 +190,49 @@ const getAllRequests = async (query, user) => {
   const where = {};
 
   const roleName = user?.Role?.RoleName;
+  const userId = user?.UserID;
+  const departmentId = user?.DepartmentID;
+
+  let allowedStatuses = null;
+
+  if (roleName === "Admin") {
+    // no filter
+  } else if (roleName === "Department Custodian") {
+    where.RequestedBy = userId;
+  } else if (roleName === "Department Head") {
+    where.DepartmentID = departmentId;
+  } else if (["Records Officer", "Records Head"].includes(roleName)) {
+    allowedStatuses = [
+      "DEPARTMENT_APPROVED",
+      "RECEIVED",
+      "UNDER_REVIEW",
+      "FOR_CRH_APPROVAL",
+      "APPROVED",
+      "FOR_TRANSMITTAL",
+      "RECEIVED_FOR_STORAGE",
+      "STORAGE_ASSIGNED",
+      "COMPLETED",
+    ];
+
+    where.Status = {
+      [Op.in]: allowedStatuses,
+    };
+  } else {
+    where.RequestedBy = userId;
+  }
 
   const isDepartmentUser = ["Department Head", "Department Custodian"].includes(
     roleName,
   );
 
-  if (isDepartmentUser) {
-    where.DepartmentID = user.DepartmentID;
-  }
-
   if (query.status) {
-    where.Status = query.status;
+    if (allowedStatuses && !allowedStatuses.includes(query.status)) {
+      where.Status = {
+        [Op.in]: [],
+      };
+    } else {
+      where.Status = query.status;
+    }
   }
 
   if (query.requestType) {
@@ -252,22 +312,13 @@ const getRequestById = async (id, user) => {
     return null;
   }
 
-  const roleName = user?.Role?.RoleName;
-
-  const isDepartmentUser = ["Department Head", "Department Custodian"].includes(
-    roleName,
-  );
-
-  if (
-    isDepartmentUser &&
-    Number(request.DepartmentID) !== Number(user.DepartmentID)
-  ) {
+  if (!canUserAccessRequest(request, user)) {
     const error = new Error("You are not allowed to view this request.");
-
     error.statusCode = 403;
-
     throw error;
   }
+
+  
 
   return request;
 };
