@@ -26,7 +26,7 @@ const RequestForm = sequelize.define(
     },
 
     Status: {
-      type: DataTypes.ENUM("DRAFT", "SUBMITTED", "REVIEWED", "APPROVED"),
+      type: DataTypes.ENUM("DRAFT", "GENERATED", "SUBMITTED", "REVIEWED", "APPROVED"),
       allowNull: false,
       defaultValue: "DRAFT",
     },

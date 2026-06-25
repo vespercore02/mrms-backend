@@ -195,7 +195,9 @@ const updateRequestForm = async (id, payload) => {
 };
 
 const submitRequestForm = async (id, userId) => {
-  const requestForm = await RequestForm.findByPk(id);
+  const requestForm = await RequestForm.findByPk(id, {
+    include: [RequestFormType],
+  });
 
   if (!requestForm) return null;
 
@@ -203,6 +205,31 @@ const submitRequestForm = async (id, userId) => {
     Status: "SUBMITTED",
     PreparedBy: userId || requestForm.PreparedBy,
   });
+
+  const formCode = requestForm.RequestFormType?.FormCode;
+
+  if (formCode === "ANNEX_A") {
+    const annexBForm = await RequestForm.findOne({
+      include: [
+        {
+          model: RequestFormType,
+          where: {
+            FormCode: "ANNEX_B",
+          },
+        },
+      ],
+      where: {
+        RequestID: requestForm.RequestID,
+      },
+    });
+
+    if (annexBForm && annexBForm.Status === "DRAFT") {
+      await annexBForm.update({
+        Status: "GENERATED",
+        PreparedBy: userId || annexBForm.PreparedBy,
+      });
+    }
+  }
 
   return await getRequestFormById(id);
 };
