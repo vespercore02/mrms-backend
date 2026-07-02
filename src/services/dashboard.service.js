@@ -95,6 +95,11 @@ const getDashboardSummary = async (user) => {
     maintenanceBays,
     totalStorageBoxes,
     totalBoxRecords,
+    draftRequests,
+    departmentApprovedRequests,
+    forCrhApprovalRequests,
+    receivedForStorageRequests,
+    storageAssignedRequests,
   ] = await Promise.all([
     Request.count({ where: requestWhere }),
     Request.count({ where: statusWhere("SUBMITTED") }),
@@ -124,6 +129,11 @@ const getDashboardSummary = async (user) => {
     CabinetBay.count({ where: { Status: "MAINTENANCE" } }),
     StorageBox.count(),
     BoxRecord.count(),
+    Request.count({ where: statusWhere("DRAFT") }),
+    Request.count({ where: statusWhere("DEPARTMENT_APPROVED") }),
+    Request.count({ where: statusWhere("FOR_CRH_APPROVAL") }),
+    Request.count({ where: statusWhere("RECEIVED_FOR_STORAGE") }),
+    Request.count({ where: statusWhere("STORAGE_ASSIGNED") }),
   ]);
 
   return {
