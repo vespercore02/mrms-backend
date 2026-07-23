@@ -1,3 +1,5 @@
+
+
 const Department = require("./Department");
 const Series = require("./Series");
 const Specific = require("./Specific");
@@ -14,6 +16,7 @@ const ImportLog = require("./ImportLog");
 const ImportLogDetail = require("./ImportLogDetail");
 const ArchiveRecord = require("./ArchiveRecord");
 const ArchiveStatusHistory = require("./ArchiveStatusHistory");
+const RecordsSchedule = require("./RecordsSchedule");
 
 const Cabinet = require("./Cabinet");
 const CabinetBay = require("./CabinetBay");
@@ -25,7 +28,6 @@ const RequestFormType = require("./RequestFormType");
 const RequestRequiredForm = require("./RequestRequiredForm");
 const RequestForm = require("./RequestForm");
 
-require("../relationships");
 
 module.exports = {
   Department,
@@ -43,6 +45,7 @@ module.exports = {
   ImportLogDetail,
   ArchiveRecord,
   ArchiveStatusHistory,
+  RecordsSchedule,
   Cabinet,
   CabinetBay,
   StorageBox,
@@ -52,3 +55,5 @@ module.exports = {
   RequestRequiredForm,
   RequestForm,
 };
+
+require("../relationships");

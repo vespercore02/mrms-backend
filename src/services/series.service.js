@@ -1,6 +1,6 @@
-const { Series, Department } = require('../models');
-const { Op } = require('sequelize');
-const { getPagination, getPagingData } = require('../utils/pagination');
+const { Series, Department, Specific, RecordsSchedule } = require("../models");
+const { Op } = require("sequelize");
+const { getPagination, getPagingData } = require("../utils/pagination");
 
 const getAllSeries = async (query) => {
   const { page, limit, offset } = getPagination(query);
@@ -20,10 +20,16 @@ const getAllSeries = async (query) => {
 
   const result = await Series.findAndCountAll({
     where,
-    include: [Department],
+    include: [
+      Department,
+      RecordsSchedule,
+      {
+        model: Specific,
+      },
+    ],
     limit,
     offset,
-    order: [['ItemNoID', 'ASC']],
+    order: [["ItemNoID", "ASC"]],
     distinct: true,
   });
 
@@ -32,7 +38,13 @@ const getAllSeries = async (query) => {
 
 const getSeriesById = async (id) => {
   return await Series.findByPk(id, {
-    include: [Department],
+    include: [
+      Department,
+      RecordsSchedule,
+      {
+        model: Specific,
+      },
+    ],
   });
 };
 

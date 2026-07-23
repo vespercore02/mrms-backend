@@ -20,6 +20,8 @@ const authRoutes = require("./routes/auth.routes");
 const dashboardRoutes = require("./routes/dashboard.routes");
 const importLogRoutes = require("./routes/importLog.routes");
 const archiveRecordRoutes = require("./routes/archiveRecord.routes");
+const recordsScheduleRoutes = require("./routes/recordsSchedule.routes");
+const recordsScheduleImportRoutes = require("./routes/recordsScheduleImport.routes");
 
 const cabinetRoutes = require("./routes/cabinet.routes");
 const cabinetBayRoutes = require("./routes/cabinetBay.routes");
@@ -64,22 +66,11 @@ app.get("/", (req, res) => {
 
 app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 
-
 app.use("/api/auth", authRoutes);
 
-app.use(
-  "/api/users",
-  protect,
-  allowRoles(...ADMIN_ONLY),
-  userRoutes,
-);
+app.use("/api/users", protect, allowRoles(...ADMIN_ONLY), userRoutes);
 
-app.use(
-  "/api/roles",
-  protect,
-  allowRoles(...ADMIN_ONLY),
-  roleRoutes,
-);
+app.use("/api/roles", protect, allowRoles(...ADMIN_ONLY), roleRoutes);
 
 app.use(
   "/api/dashboard",
@@ -97,9 +88,9 @@ app.use(
     "Records Officer",
     "Department Head",
     "Department Custodian",
-    "Viewer"
+    "Viewer",
   ),
-  requestRoutes
+  requestRoutes,
 );
 
 app.use(
@@ -130,18 +121,20 @@ app.use(
   departmentRoutes,
 );
 
-app.use(
-  "/api/series",
-  protect,
-  allowRoles(...REQUEST_USERS),
-  seriesRoutes,
-);
+app.use("/api/series", protect, allowRoles(...REQUEST_USERS), seriesRoutes);
 
 app.use(
   "/api/specifics",
   protect,
   allowRoles(...CRO_OPERATIONS),
   specificRoutes,
+);
+
+app.use("/api/records-schedules", recordsScheduleRoutes);
+
+app.use(
+  "/api/records-schedules",
+  recordsScheduleImportRoutes,
 );
 
 app.use(
@@ -165,12 +158,7 @@ app.use(
   importLogRoutes,
 );
 
-app.use(
-  "/api/cabinets",
-  protect,
-  allowRoles(...CRO_OPERATIONS),
-  cabinetRoutes,
-);
+app.use("/api/cabinets", protect, allowRoles(...CRO_OPERATIONS), cabinetRoutes);
 
 app.use(
   "/api/cabinet-bays",
@@ -202,9 +190,9 @@ app.use(
     "Records Officer",
     "Department Head",
     "Department Custodian",
-    "Viewer"
+    "Viewer",
   ),
-  requestV2FoundationRoutes
+  requestV2FoundationRoutes,
 );
 
 app.use(
@@ -215,9 +203,9 @@ app.use(
     "Records Head",
     "Records Officer",
     "Department Head",
-    "Department Custodian"
+    "Department Custodian",
   ),
-  requestFormRoutes
+  requestFormRoutes,
 );
 
 app.use(errorHandler);

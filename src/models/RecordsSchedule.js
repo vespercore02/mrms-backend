@@ -1,31 +1,32 @@
 const { DataTypes } = require("sequelize");
 const sequelize = require("../config/database");
 
-const Series = sequelize.define(
-  "Series",
+const RecordsSchedule = sequelize.define(
+  "RecordsSchedule",
   {
-    SeriesID: {
+    RecordsScheduleID: {
       type: DataTypes.INTEGER,
       autoIncrement: true,
       primaryKey: true,
     },
 
-    ItemNoID: {
+    ScheduleCode: {
       type: DataTypes.STRING(100),
       allowNull: false,
     },
 
-    SeriesName: {
+    ScheduleName: {
       type: DataTypes.STRING(255),
       allowNull: false,
     },
 
-    RetentionPeriod: {
-      type: DataTypes.STRING(255),
-      allowNull: true,
+    ScheduleType: {
+      type: DataTypes.ENUM("GRDS", "RDS"),
+      allowNull: false,
+      defaultValue: "GRDS",
     },
 
-    RdsYear: {
+    SeriesYear: {
       type: DataTypes.STRING(20),
       allowNull: true,
     },
@@ -35,20 +36,21 @@ const Series = sequelize.define(
       allowNull: true,
     },
 
-    RecordsScheduleID: {
-      type: DataTypes.INTEGER,
-      allowNull: true,
-    },
-
     DepartmentID: {
       type: DataTypes.INTEGER,
       allowNull: true,
     },
+
+    Status: {
+      type: DataTypes.ENUM("ACTIVE", "INACTIVE", "SUPERSEDED"),
+      allowNull: false,
+      defaultValue: "ACTIVE",
+    },
   },
   {
-    tableName: "tblSeries",
-    timestamps: false,
+    tableName: "tblRecordsSchedules",
+    timestamps: true,
   },
 );
 
-module.exports = Series;
+module.exports = RecordsSchedule;

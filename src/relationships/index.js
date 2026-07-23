@@ -14,6 +14,7 @@ const ImportLog = require("../models/ImportLog");
 const ImportLogDetail = require("../models/ImportLogDetail");
 const ArchiveRecord = require("../models/ArchiveRecord");
 const ArchiveStatusHistory = require("../models/ArchiveStatusHistory");
+const RecordsSchedule = require("../models/RecordsSchedule");
 
 const Cabinet = require("../models/Cabinet");
 const CabinetBay = require("../models/CabinetBay");
@@ -306,4 +307,12 @@ Department.hasMany(Request, {
 
 Request.belongsTo(Department, {
   foreignKey: "DepartmentID",
+});
+
+RecordsSchedule.hasMany(Series, {
+  foreignKey: "RecordsScheduleID",
+});
+
+Series.belongsTo(RecordsSchedule, {
+  foreignKey: "RecordsScheduleID",
 });
