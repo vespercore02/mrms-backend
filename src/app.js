@@ -22,6 +22,7 @@ const importLogRoutes = require("./routes/importLog.routes");
 const archiveRecordRoutes = require("./routes/archiveRecord.routes");
 const recordsScheduleRoutes = require("./routes/recordsSchedule.routes");
 const recordsScheduleImportRoutes = require("./routes/recordsScheduleImport.routes");
+const rdsRoutes = require("./routes/rds.routes");
 
 const cabinetRoutes = require("./routes/cabinet.routes");
 const cabinetBayRoutes = require("./routes/cabinetBay.routes");
@@ -128,6 +129,13 @@ app.use(
   protect,
   allowRoles(...CRO_OPERATIONS),
   specificRoutes,
+);
+
+app.use(
+  "/api/rds",
+  protect,
+  allowRoles(...REQUEST_USERS),
+  rdsRoutes,
 );
 
 app.use("/api/records-schedules", recordsScheduleRoutes);

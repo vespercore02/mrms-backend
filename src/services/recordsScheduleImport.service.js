@@ -35,15 +35,9 @@ const isCategoryRow = ({ itemNo, title, retentionPeriod }) => {
 };
 
 const isHeaderOrSectionRow = ({ itemNo, title, retentionPeriod }) => {
-  const first = String(itemNo || "")
-    .trim()
-    .toUpperCase();
-  const second = String(title || "")
-    .trim()
-    .toUpperCase();
-  const third = String(retentionPeriod || "")
-    .trim()
-    .toUpperCase();
+  const first = String(itemNo || "").trim().toUpperCase();
+  const second = String(title || "").trim().toUpperCase();
+  const third = String(retentionPeriod || "").trim().toUpperCase();
 
   if (!first && !second && !third) return true;
   if (first.includes("GENERAL RECORDS DISPOSITION SCHEDULE")) return true;
@@ -62,19 +56,14 @@ const readExcelRows = (filePath) => {
   const sheetName = workbook.SheetNames[0];
   const worksheet = workbook.Sheets[sheetName];
 
-  const rows = XLSX.utils.sheet_to_json(worksheet, {
+  return XLSX.utils.sheet_to_json(worksheet, {
     header: 1,
     defval: "",
   });
-
-  return {
-    rows,
-    merges: worksheet["!merges"] || [],
-  };
 };
 
-const buildImportPreview = (filePath, fallbackCategory = null) => {
-  const { rows, merges } = readExcelRows(filePath);
+const buildImportPreview = (filePath) => {
+  const rows = readExcelRows(filePath);
 
   const parsed = [];
   const skippedRows = [];
@@ -90,19 +79,8 @@ const buildImportPreview = (filePath, fallbackCategory = null) => {
     const title = normalizeText(row[1]);
     const retentionPeriod = normalizeText(row[2]);
 
-    if (
-      isCategoryRow({ itemNo, title, retentionPeriod }) ||
-      isMergedCategoryRow({
-        rowIndex: index,
-        itemNo,
-        title,
-        retentionPeriod,
-        merges,
-      })
-    ) {
-      const categoryName = itemNo;
-
-      currentCategory = categoryName;
+    if (isCategoryRow({ itemNo, title, retentionPeriod })) {
+      currentCategory = itemNo;
       currentSeries = null;
 
       if (!categorySummary[currentCategory]) {
@@ -127,19 +105,6 @@ const buildImportPreview = (filePath, fallbackCategory = null) => {
     if (isHeaderOrSectionRow({ itemNo, title, retentionPeriod })) {
       currentSeries = null;
 
-      const upperItemNo = String(itemNo || "").toUpperCase();
-      const upperTitle = String(title || "").toUpperCase();
-
-      const isScheduleBoundary =
-        upperItemNo.includes("GENERAL RECORDS DISPOSITION SCHEDULE") ||
-        upperItemNo.includes("COMMON TO ALL") ||
-        upperItemNo.startsWith("SERIES ") ||
-        upperTitle.startsWith("SERIES ");
-
-      if (isScheduleBoundary) {
-        currentCategory = null;
-      }
-
       skippedRows.push({
         rowNumber,
         reason: "Header or section row",
@@ -152,30 +117,28 @@ const buildImportPreview = (filePath, fallbackCategory = null) => {
     }
 
     if (isValidItemNo(itemNo)) {
-      const resolvedCategory = currentCategory || fallbackCategory || null;
-
       currentSeries = {
         rowNumber,
         type: "SERIES",
         itemNo,
         title,
         retentionPeriod: retentionPeriod || null,
-        category: resolvedCategory,
+        category: currentCategory,
         specifics: [],
       };
 
       parsed.push(currentSeries);
 
-      if (resolvedCategory) {
-        if (!categorySummary[resolvedCategory]) {
-          categorySummary[resolvedCategory] = {
-            name: resolvedCategory,
+      if (currentCategory) {
+        if (!categorySummary[currentCategory]) {
+          categorySummary[currentCategory] = {
+            name: currentCategory,
             totalSeries: 0,
             totalSpecifics: 0,
           };
         }
 
-        categorySummary[resolvedCategory].totalSeries += 1;
+        categorySummary[currentCategory].totalSeries += 1;
       }
 
       return;
@@ -223,63 +186,97 @@ const buildImportPreview = (filePath, fallbackCategory = null) => {
   };
 };
 
-const isMergedCategoryRow = ({
-  rowIndex,
-  itemNo,
-  title,
-  retentionPeriod,
-  merges,
-}) => {
-  if (isValidItemNo(itemNo)) return false;
-  if (!itemNo || title || retentionPeriod) return false;
-
-  return merges.some((merge) => {
-    return (
-      merge.s.r === rowIndex &&
-      merge.e.r === rowIndex &&
-      merge.s.c === 0 &&
-      merge.e.c >= 2
-    );
-  });
-};
-
 const importPreviewToDatabase = async ({
   recordsScheduleId,
+  departmentId,
   rdsYear,
   category,
   preview,
 }) => {
-  const createdSeries = [];
+  let importedSeries = 0;
+  let skippedSeries = 0;
+
+  let importedSpecifics = 0;
+  let skippedSpecifics = 0;
 
   for (const seriesItem of preview.series) {
-    const series = await Series.create({
-      ItemNoID: seriesItem.itemNo,
-      SeriesName: seriesItem.title,
-      RetentionPeriod: seriesItem.retentionPeriod,
-      RdsYear: rdsYear || null,
-      Category: seriesItem.category || category || "UNCATEGORIZED",
-      RecordsScheduleID: recordsScheduleId,
-      DepartmentID: null,
+    const seriesCategory =
+      seriesItem.category || category || null;
+
+    const seriesRetentionPeriod =
+      seriesItem.retentionPeriod || null;
+
+    // Look for the same RDS entry first.
+    const existingSeries = await Series.findOne({
+      where: {
+        RecordsScheduleID: recordsScheduleId,
+        ItemNoID: seriesItem.itemNo,
+        SeriesName: seriesItem.title,
+        RetentionPeriod: seriesRetentionPeriod,
+        RdsYear: rdsYear || null,
+        Category: seriesCategory,
+        DepartmentID: departmentId || null,
+      },
     });
 
+    let series;
+
+    if (existingSeries) {
+      series = existingSeries;
+      skippedSeries += 1;
+    } else {
+      series = await Series.create({
+        ItemNoID: seriesItem.itemNo,
+        SeriesName: seriesItem.title,
+        RetentionPeriod: seriesRetentionPeriod,
+        RdsYear: rdsYear || null,
+        Category: seriesCategory,
+        RecordsScheduleID: recordsScheduleId,
+        DepartmentID: departmentId || null,
+      });
+
+      importedSeries += 1;
+    }
+
+    // Specific records are also protected from duplicates.
     for (const specificItem of seriesItem.specifics) {
+      const specificRetentionPeriod =
+        specificItem.retentionPeriod ||
+        seriesItem.retentionPeriod ||
+        "";
+
+      const existingSpecific = await Specific.findOne({
+        where: {
+          SeriesID: series.SeriesID,
+          SpecificName: specificItem.title,
+          RetentionPeriod: specificRetentionPeriod,
+        },
+      });
+
+      if (existingSpecific) {
+        skippedSpecifics += 1;
+        continue;
+      }
+
       await Specific.create({
         SeriesID: series.SeriesID,
         SpecificName: specificItem.title,
-        RetentionPeriod:
-          specificItem.retentionPeriod || seriesItem.retentionPeriod || "",
+        RetentionPeriod: specificRetentionPeriod,
       });
-    }
 
-    createdSeries.push(series);
+      importedSpecifics += 1;
+    }
   }
 
   return {
-    importedSeries: createdSeries.length,
-    importedSpecifics: preview.totalSpecifics,
+    importedSeries,
+    skippedSeries,
+    importedSpecifics,
+    skippedSpecifics,
+    totalProcessedSeries: preview.totalSeries,
+    totalProcessedSpecifics: preview.totalSpecifics,
   };
 };
-
 module.exports = {
   buildImportPreview,
   importPreviewToDatabase,

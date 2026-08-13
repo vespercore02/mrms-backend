@@ -316,3 +316,11 @@ RecordsSchedule.hasMany(Series, {
 Series.belongsTo(RecordsSchedule, {
   foreignKey: "RecordsScheduleID",
 });
+
+RecordsSchedule.belongsTo(Department, {
+  foreignKey: "DepartmentID",
+});
+
+Department.hasMany(RecordsSchedule, {
+  foreignKey: "DepartmentID",
+});
